@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { createInvitation } from '@/api/invitations'
 import { convertCompanyPartner, fetchTeamRoster, registerCompanyPartner } from '@/api/dashboard'
@@ -14,6 +14,7 @@ import ReportExportBar from '@/components/reports/ReportExportBar.vue'
 import type { ClayTone } from '@/components/ui/ClayTile.vue'
 import type { IconName } from '@/components/ui/AppIcon.vue'
 import { useToast } from '@/composables/useToast'
+import { useDinoTourStore } from '@/stores/dinoTour'
 import type { InvitationCreated, ReferralRow, TeamKind, TeamRosterSummary } from '@/types/mlm'
 import { errorMessage, fieldErrors } from '@/utils/http'
 import { compactNumber, crmStageLabel, formatDate, formatDateTime, money } from '@/utils/format'
@@ -38,6 +39,7 @@ const errors = ref<Record<string, string[]>>({})
 const created = ref<InvitationCreated | null>(null)
 const filter = ref<'all' | 'partners' | 'leaders' | 'company' | 'follow_up'>('all')
 const toast = useToast()
+const tour = useDinoTourStore()
 const email = ref('')
 const companyForm = reactive({
   name: '',
@@ -128,6 +130,20 @@ async function load(): Promise<void> {
     loading.value = false
   }
 }
+
+watch(
+  () => tour.current?.reveal,
+  (reveal) => {
+    if (reveal === 'invite-partner') {
+      inviteOpen.value = true
+      addKind.value = 'partner'
+    }
+    if (reveal === 'invite-company') {
+      inviteOpen.value = true
+      addKind.value = 'company'
+    }
+  },
+)
 
 onMounted(() => {
   void load()
@@ -235,7 +251,7 @@ async function copyLink(): Promise<void> {
         'Filtra por color y tipo. El seguimiento CRM es solo de la red de plataforma.',
       ]"
     >
-      <SoftButton variant="yellow" @click="inviteOpen = !inviteOpen">
+      <SoftButton variant="yellow" data-tour="team-add" @click="inviteOpen = !inviteOpen">
         {{ inviteOpen ? 'Cerrar' : 'Añadir persona' }}
       </SoftButton>
     </ModuleBanner>
@@ -285,7 +301,7 @@ async function copyLink(): Promise<void> {
       </SoftCard>
     </div>
 
-    <SoftCard v-if="inviteOpen" class="mt-6 max-w-xl">
+    <SoftCard v-if="inviteOpen" class="mt-6 max-w-xl" data-tour="team-invite-form">
       <div class="flex gap-2">
         <button
           type="button"

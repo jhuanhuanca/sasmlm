@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { fetchRegistrationOptions } from '@/api/auth'
 import { addSecondaryCompany, switchActiveCompany } from '@/api/companies'
 import SoftButton from '@/components/ui/SoftButton.vue'
 import SoftField from '@/components/ui/SoftField.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useDinoTourStore } from '@/stores/dinoTour'
 import { useToast } from '@/composables/useToast'
 import type { CatalogCompanyOption } from '@/types/auth'
 import { errorMessage } from '@/utils/http'
@@ -19,6 +20,7 @@ const emit = defineEmits<{
 }>()
 
 const auth = useAuthStore()
+const tour = useDinoTourStore()
 const toast = useToast()
 const adding = ref(false)
 const saving = ref(false)
@@ -84,6 +86,15 @@ async function submitAdd(): Promise<void> {
   }
 }
 
+watch(
+  () => tour.current?.reveal,
+  (reveal) => {
+    if (reveal === 'add-company') {
+      adding.value = true
+    }
+  },
+)
+
 onMounted(async () => {
   try {
     companies.value = (await fetchRegistrationOptions()).companies
@@ -94,7 +105,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div v-if="visible" class="mb-4 rounded-card border border-line bg-card px-4 py-3">
+  <div v-if="visible" class="mb-4 rounded-card border border-line bg-card px-4 py-3" data-tour="company-scope">
     <div class="flex flex-wrap items-end gap-3">
       <label class="min-w-[180px] flex-1">
         <span class="mb-1.5 block text-[13px] font-medium text-muted">{{ label || 'Empresa activa' }}</span>

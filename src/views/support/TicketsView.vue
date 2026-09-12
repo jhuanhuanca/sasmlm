@@ -86,6 +86,7 @@ onMounted(load)
 
 <template>
   <div class="space-y-6">
+    <div data-tour="support-welcome">
     <ModuleBanner
       icon="clipboard"
       eyebrow="Ayuda"
@@ -97,9 +98,10 @@ onMounted(load)
         'Si el ticket sigue abierto, puedes añadir más información.',
       ]"
     />
+    </div>
 
     <div class="grid gap-5 lg:grid-cols-2">
-      <SoftCard>
+      <SoftCard data-tour="support-form">
         <h2 class="font-medium">Nuevo ticket</h2>
         <form class="mt-4 space-y-4" @submit.prevent="submit">
           <SoftField label="Asunto" :error="errors.subject?.[0]">
@@ -112,7 +114,7 @@ onMounted(load)
         </form>
       </SoftCard>
 
-      <SoftCard :padded="false">
+      <SoftCard :padded="false" data-tour="support-list">
         <div class="px-7 py-5">
           <h2 class="font-medium">Tus tickets</h2>
         </div>

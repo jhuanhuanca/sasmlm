@@ -398,6 +398,7 @@ defineExpose({ resetForm })
             ? 'Regalos y extras que das al vender. Su costo de compra se suma al costo de venta del producto al que lo ligues.'
             : 'Solo tu tienda. Indica costo, incentivo y margen. El precio de venta se calcula para alcanzar ese margen; si cambias el precio a mano, el margen se actualiza.'
         "
+        data-tour="store-new-product"
       >
         <form class="space-y-3" @submit.prevent="submit">
           <SoftField label="Nombre" :error="errors.name?.[0]">
@@ -442,7 +443,7 @@ defineExpose({ resetForm })
             </SoftField>
           </div>
           <template v-if="!isIncentive">
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2" data-tour="store-gift">
               <SoftField label="Incentivo" :error="errors.incentive_product_id?.[0]">
                 <select v-model="form.incentive_product_id" :class="fieldControlClass">
                   <option value="">Sin incentivo</option>
@@ -579,6 +580,7 @@ defineExpose({ resetForm })
             : 'Stock en tu tienda. Costo de venta = compra + incentivo. Asignar pasa unidades a un miembro del equipo.'
         "
         flush
+        data-tour="store-warehouse"
       >
         <div v-if="products.length" class="grid grid-cols-3 gap-2 border-b border-line px-4 py-3 text-[11px] sm:px-5 sm:text-xs">
           <template v-for="row in totals" :key="row.currency">

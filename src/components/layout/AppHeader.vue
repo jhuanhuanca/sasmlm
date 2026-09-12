@@ -190,7 +190,7 @@ async function logout(): Promise<void> {
         </RouterLink>
       </nav>
 
-      <div class="ml-auto flex shrink-0 items-center gap-1.5 self-center sm:gap-2">
+      <div class="ml-auto flex shrink-0 items-center gap-1.5 self-center sm:gap-2" data-tour="app-tools">
         <button
           v-if="pageTourId"
           type="button"

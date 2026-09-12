@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { fetchMyLanding, toggleLandingPublish, updateMyLanding, uploadLandingAsset } from '@/api/landing'
 import LandingPageCanvas from '@/components/landing/LandingPageCanvas.vue'
 import SoftButton from '@/components/ui/SoftButton.vue'
@@ -222,7 +222,18 @@ function hydrate(next: LandingSummary): void {
   form.blocks = [...(next.content?.blocks ?? [])]
 }
 
+function closeEditor(): void {
+  activeField.value = null
+}
+
+function onEditorKey(event: KeyboardEvent): void {
+  if (event.key === 'Escape' && activeField.value) {
+    closeEditor()
+  }
+}
+
 onMounted(async () => {
+  document.addEventListener('keydown', onEditorKey)
   try {
     hydrate(await fetchMyLanding())
   } catch (error) {
@@ -230,6 +241,10 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', onEditorKey)
 })
 
 function payload() {
@@ -370,11 +385,12 @@ function clearLogo(): void {
         title="Landing"
         body="Editas tu página como la ve el visitante: clic en el logo, tu foto o un texto y cambia eso. Cuando publicas, cualquiera abre /l/tu-slug."
         :actions="[
-          'Clic en lo que quieres cambiar en la vista previa.',
+          'Clic en lo que quieres cambiar: se abre el formulario al instante.',
           'Elige la forma de tu foto y tu paleta de colores.',
           'Guarda y publica cuando esté lista.',
         ]"
       >
+        <div class="flex flex-wrap items-center gap-2" data-tour="landing-actions">
         <a
           v-if="landing"
           :href="`/l/${landing.slug}`"
@@ -387,6 +403,7 @@ function clearLogo(): void {
         <SoftButton variant="yellow" :disabled="!landing" @click="toggle">
           {{ landing?.is_published ? 'Despublicar' : 'Publicar' }}
         </SoftButton>
+        </div>
       </ModuleBanner>
     </div>
     <p v-if="loading" class="mt-6 text-sm text-muted">Cargando…</p>
@@ -395,7 +412,7 @@ function clearLogo(): void {
     <div v-if="landing" class="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(280px,340px)]">
       <div class="lp-studio" data-tour="landing-hero">
         <p class="mb-3 text-sm text-muted">
-          Vista previa. El recuadro amarillo marca lo seleccionado. Cambia la forma y los colores en el panel.
+          Vista previa. Toca logo, foto, fondo o un texto: el cambio se abre en una ventana, sin bajar al panel.
         </p>
         <div class="lp-studio-stage">
           <LandingPageCanvas
@@ -411,11 +428,13 @@ function clearLogo(): void {
         </div>
       </div>
 
-      <SoftCard class="h-fit space-y-4 xl:sticky xl:top-4" data-tour="landing-blocks">
+      <SoftCard class="h-fit space-y-4 pb-28 xl:sticky xl:top-4 xl:pb-4" data-tour="landing-blocks">
         <div>
-          <p class="text-xs uppercase tracking-[0.14em] text-muted">Estás editando</p>
-          <h2 class="mt-1 font-medium">{{ panelTitle }}</h2>
-          <p class="mt-1 text-sm text-muted">{{ panelHint }}</p>
+          <p class="text-xs uppercase tracking-[0.14em] text-muted">Estilo</p>
+          <h2 class="mt-1 font-medium">Forma y colores</h2>
+          <p class="mt-1 text-sm text-muted">
+            La foto y los textos se editan tocando la vista previa. Aquí dejas la silueta y la paleta.
+          </p>
         </div>
 
         <div class="space-y-3 rounded-xl bg-shell p-3">
@@ -447,120 +466,151 @@ function clearLogo(): void {
           </div>
         </div>
 
-        <template v-if="activeField === 'logo'">
-          <div v-if="form.logo" class="bg-transparent">
-            <img :src="form.logo" alt="" class="mx-auto h-24 w-auto max-w-full object-contain" />
-          </div>
-          <SoftButton variant="outline" type="button" :disabled="uploading" @click="logoInput?.click()">
-            {{ form.logo ? 'Cambiar logo' : 'Subir logo' }}
-          </SoftButton>
-          <button v-if="form.logo" type="button" class="text-sm text-muted" @click="clearLogo">Quitar logo</button>
-        </template>
-
-        <SoftField v-else-if="activeField === 'title'" label="Nombre">
-          <input v-model="form.title" :class="fieldControlClass" />
-        </SoftField>
-
-        <template v-else-if="activeField === 'photo'">
-          <div v-if="form.photo" class="overflow-hidden rounded-xl border border-line">
-            <img :src="form.photo" alt="" class="h-40 w-full object-cover" />
-          </div>
-          <SoftButton variant="outline" type="button" :disabled="uploading" @click="photoInput?.click()">
-            {{ form.photo ? 'Cambiar foto' : 'Subir foto' }}
-          </SoftButton>
-          <button v-if="form.photo" type="button" class="text-sm text-muted" @click="clearPhoto">Quitar foto</button>
-        </template>
-
-        <template v-else-if="activeField === 'background'">
-          <div v-if="form.background" class="overflow-hidden rounded-xl border border-line">
-            <img :src="form.background" alt="" class="h-40 w-full object-cover" />
-          </div>
-          <SoftButton variant="outline" type="button" :disabled="uploading" @click="backgroundInput?.click()">
-            {{ form.background ? 'Cambiar fondo' : 'Subir fondo' }}
-          </SoftButton>
-          <button v-if="form.background" type="button" class="text-sm text-muted" @click="clearBackground">
-            Quitar fondo
-          </button>
-        </template>
-
-        <SoftField v-else-if="activeField === 'kicker'" label="Frase pequeña">
-          <input v-model="form.kicker" :class="fieldControlClass" placeholder="We Created" />
-        </SoftField>
-
-        <SoftField v-else-if="activeField === 'headline'" label="Titular">
-          <input v-model="form.heroTitle" :class="fieldControlClass" />
-        </SoftField>
-
-        <SoftField v-else-if="activeField === 'subtitle'" label="Subtítulo">
-          <textarea v-model="form.heroSubtitle" :class="fieldControlClass" rows="4" />
-        </SoftField>
-
-        <SoftField v-else-if="activeField === 'cta'" label="Texto del botón">
-          <input v-model="form.ctaLabel" :class="fieldControlClass" />
-        </SoftField>
-
-        <SoftField v-else-if="activeField === 'whatsapp'" label="Número" hint="Sin + ni espacios.">
-          <input v-model="form.whatsapp" :class="fieldControlClass" placeholder="59168785473" inputmode="tel" />
-        </SoftField>
-
-        <template v-else-if="activeField === 'reasons_photo'">
-          <div v-if="form.reasonsPhoto" class="overflow-hidden rounded-xl border border-line">
-            <img :src="form.reasonsPhoto" alt="" class="h-40 w-full object-cover" />
-          </div>
-          <SoftButton variant="outline" type="button" :disabled="uploading" @click="reasonsInput?.click()">
-            {{ form.reasonsPhoto ? 'Cambiar segunda foto' : 'Subir segunda foto' }}
-          </SoftButton>
-          <button v-if="form.reasonsPhoto" type="button" class="text-sm text-muted" @click="clearReasonsPhoto">
-            Quitar segunda foto
-          </button>
-        </template>
-
-        <SoftField v-else-if="activeField === 'reasons_kicker'" label="Rótulo">
-          <input v-model="form.reasonsKicker" :class="fieldControlClass" placeholder="Reasons" />
-        </SoftField>
-
-        <SoftField v-else-if="activeField === 'reasons_title'" label="Título">
-          <input v-model="form.reasonsTitle" :class="fieldControlClass" />
-        </SoftField>
-
-        <SoftField v-else-if="activeField === 'reasons_body'" label="Texto">
-          <textarea v-model="form.reasonsBody" :class="fieldControlClass" rows="5" />
-        </SoftField>
-
-        <SoftField v-else-if="activeField === 'reasons_benefits'" label="Beneficios" hint="Uno por línea.">
-          <textarea v-model="form.reasonsBenefits" :class="fieldControlClass" rows="6" />
-        </SoftField>
-
-        <template v-else-if="activeField === 'blocks'">
-          <div class="flex flex-wrap gap-2">
-            <SoftButton variant="outline" type="button" @click="addBlock('text')">Texto</SoftButton>
-            <SoftButton variant="outline" type="button" @click="addBlock('image')">Imagen</SoftButton>
-            <SoftButton variant="outline" type="button" @click="addBlock('store_cta')">CTA tienda</SoftButton>
-          </div>
-        </template>
-
-        <template v-else-if="activeBlock">
-          <textarea
-            v-if="activeBlock.type !== 'image'"
-            v-model="activeBlock.body"
-            :class="fieldControlClass"
-            rows="4"
-            :placeholder="activeBlock.type === 'store_cta' ? 'Texto del botón a la tienda' : 'Contenido'"
-          />
-          <input
-            v-else
-            v-model="activeBlock.path"
-            :class="fieldControlClass"
-            placeholder="URL https de la imagen"
-          />
-          <button type="button" class="text-sm text-muted" @click="removeActiveBlock">Quitar este bloque</button>
-        </template>
-
         <div class="flex flex-wrap gap-2 border-t border-line pt-4">
           <SoftButton type="button" :disabled="saving" @click="save(false)">Guardar landing</SoftButton>
         </div>
       </SoftCard>
     </div>
+
+    <Teleport to="body">
+      <div
+        v-if="activeField"
+        class="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-4"
+        @click.self="closeEditor"
+      >
+        <div
+          class="flex max-h-[88svh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-card shadow-lg sm:rounded-card"
+          role="dialog"
+          aria-modal="true"
+          :aria-labelledby="'landing-edit-title'"
+        >
+          <div class="flex items-start justify-between gap-3 border-b border-line px-5 py-4">
+            <div class="min-w-0">
+              <p class="text-xs uppercase tracking-[0.14em] text-muted">Estás editando</p>
+              <h2 id="landing-edit-title" class="mt-1 font-medium">{{ panelTitle }}</h2>
+              <p class="mt-1 text-sm text-muted">{{ panelHint }}</p>
+            </div>
+            <button type="button" class="shrink-0 rounded-full px-2 py-1 text-sm text-muted" @click="closeEditor">
+              Cerrar
+            </button>
+          </div>
+          <div class="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
+            <template v-if="activeField === 'logo'">
+              <div v-if="form.logo" class="bg-transparent">
+                <img :src="form.logo" alt="" class="mx-auto h-24 w-auto max-w-full object-contain" />
+              </div>
+              <SoftButton variant="outline" type="button" :disabled="uploading" @click="logoInput?.click()">
+                {{ form.logo ? 'Cambiar logo' : 'Subir logo' }}
+              </SoftButton>
+              <button v-if="form.logo" type="button" class="text-sm text-muted" @click="clearLogo">Quitar logo</button>
+            </template>
+
+            <SoftField v-else-if="activeField === 'title'" label="Nombre">
+              <input v-model="form.title" :class="fieldControlClass" />
+            </SoftField>
+
+            <template v-else-if="activeField === 'photo'">
+              <div v-if="form.photo" class="overflow-hidden rounded-xl border border-line">
+                <img :src="form.photo" alt="" class="h-40 w-full object-cover" />
+              </div>
+              <SoftButton variant="outline" type="button" :disabled="uploading" @click="photoInput?.click()">
+                {{ form.photo ? 'Cambiar foto' : 'Subir foto' }}
+              </SoftButton>
+              <button v-if="form.photo" type="button" class="text-sm text-muted" @click="clearPhoto">Quitar foto</button>
+            </template>
+
+            <template v-else-if="activeField === 'background'">
+              <div v-if="form.background" class="overflow-hidden rounded-xl border border-line">
+                <img :src="form.background" alt="" class="h-40 w-full object-cover" />
+              </div>
+              <SoftButton variant="outline" type="button" :disabled="uploading" @click="backgroundInput?.click()">
+                {{ form.background ? 'Cambiar fondo' : 'Subir fondo' }}
+              </SoftButton>
+              <button v-if="form.background" type="button" class="text-sm text-muted" @click="clearBackground">
+                Quitar fondo
+              </button>
+            </template>
+
+            <SoftField v-else-if="activeField === 'kicker'" label="Frase pequeña">
+              <input v-model="form.kicker" :class="fieldControlClass" placeholder="We Created" />
+            </SoftField>
+
+            <SoftField v-else-if="activeField === 'headline'" label="Titular">
+              <input v-model="form.heroTitle" :class="fieldControlClass" />
+            </SoftField>
+
+            <SoftField v-else-if="activeField === 'subtitle'" label="Subtítulo">
+              <textarea v-model="form.heroSubtitle" :class="fieldControlClass" rows="4" />
+            </SoftField>
+
+            <SoftField v-else-if="activeField === 'cta'" label="Texto del botón">
+              <input v-model="form.ctaLabel" :class="fieldControlClass" />
+            </SoftField>
+
+            <SoftField v-else-if="activeField === 'whatsapp'" label="Número" hint="Sin + ni espacios.">
+              <input v-model="form.whatsapp" :class="fieldControlClass" placeholder="59168785473" inputmode="tel" />
+            </SoftField>
+
+            <template v-else-if="activeField === 'reasons_photo'">
+              <div v-if="form.reasonsPhoto" class="overflow-hidden rounded-xl border border-line">
+                <img :src="form.reasonsPhoto" alt="" class="h-40 w-full object-cover" />
+              </div>
+              <SoftButton variant="outline" type="button" :disabled="uploading" @click="reasonsInput?.click()">
+                {{ form.reasonsPhoto ? 'Cambiar segunda foto' : 'Subir segunda foto' }}
+              </SoftButton>
+              <button v-if="form.reasonsPhoto" type="button" class="text-sm text-muted" @click="clearReasonsPhoto">
+                Quitar segunda foto
+              </button>
+            </template>
+
+            <SoftField v-else-if="activeField === 'reasons_kicker'" label="Rótulo">
+              <input v-model="form.reasonsKicker" :class="fieldControlClass" placeholder="Reasons" />
+            </SoftField>
+
+            <SoftField v-else-if="activeField === 'reasons_title'" label="Título">
+              <input v-model="form.reasonsTitle" :class="fieldControlClass" />
+            </SoftField>
+
+            <SoftField v-else-if="activeField === 'reasons_body'" label="Texto">
+              <textarea v-model="form.reasonsBody" :class="fieldControlClass" rows="5" />
+            </SoftField>
+
+            <SoftField v-else-if="activeField === 'reasons_benefits'" label="Beneficios" hint="Uno por línea.">
+              <textarea v-model="form.reasonsBenefits" :class="fieldControlClass" rows="6" />
+            </SoftField>
+
+            <template v-else-if="activeField === 'blocks'">
+              <div class="flex flex-wrap gap-2">
+                <SoftButton variant="outline" type="button" @click="addBlock('text')">Texto</SoftButton>
+                <SoftButton variant="outline" type="button" @click="addBlock('image')">Imagen</SoftButton>
+                <SoftButton variant="outline" type="button" @click="addBlock('store_cta')">CTA tienda</SoftButton>
+              </div>
+            </template>
+
+            <template v-else-if="activeBlock">
+              <textarea
+                v-if="activeBlock.type !== 'image'"
+                v-model="activeBlock.body"
+                :class="fieldControlClass"
+                rows="4"
+                :placeholder="activeBlock.type === 'store_cta' ? 'Texto del botón a la tienda' : 'Contenido'"
+              />
+              <input
+                v-else
+                v-model="activeBlock.path"
+                :class="fieldControlClass"
+                placeholder="URL https de la imagen"
+              />
+              <button type="button" class="text-sm text-muted" @click="removeActiveBlock">Quitar este bloque</button>
+            </template>
+          </div>
+          <div class="flex flex-wrap gap-2 border-t border-line px-5 py-4">
+            <SoftButton type="button" variant="outline" @click="closeEditor">Listo</SoftButton>
+            <SoftButton type="button" variant="yellow" :disabled="saving" @click="save(false)">Guardar</SoftButton>
+          </div>
+        </div>
+      </div>
+    </Teleport>
 
     <input ref="photoInput" class="hidden" type="file" accept="image/jpeg,image/png,image/webp,image/gif" @change="onAsset('photo', $event)" />
     <input ref="backgroundInput" class="hidden" type="file" accept="image/jpeg,image/png,image/webp,image/gif" @change="onAsset('background', $event)" />

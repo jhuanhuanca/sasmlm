@@ -7,7 +7,7 @@ import {
   type TourTone,
 } from '@/data/dinoTours'
 
-const STORAGE_PREFIX = 'rexmlm.dino-tour.'
+const STORAGE_PREFIX = 'rexmlm.dino-tour.v2.'
 
 function seenKey(id: DinoTourId): string {
   return `${STORAGE_PREFIX}${id}`

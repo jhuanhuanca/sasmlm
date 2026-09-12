@@ -71,7 +71,12 @@ async function measure(): Promise<void> {
   }
 
   await nextTick()
-  const el = queryTarget(step.target)
+  let el = queryTarget(step.target)
+  if (!el && step.reveal) {
+    await new Promise((resolve) => window.setTimeout(resolve, 120))
+    await nextTick()
+    el = queryTarget(step.target)
+  }
 
   if (!el) {
     if (step.optional) {
@@ -147,7 +152,7 @@ onBeforeUnmount(() => {
 })
 
 watch(
-  () => [active.value, current.value?.id, current.value?.panel],
+  () => [active.value, current.value?.id, current.value?.panel, current.value?.reveal],
   () => {
     void measure()
   },
@@ -173,11 +178,12 @@ watch(
     v-if="showLauncher && pageTourId"
     type="button"
     class="dino-launcher"
+    :class="{ 'is-dock-preview': String(route.name) === 'landing' }"
     :style="launcherStyle"
     :title="pageLauncher"
     @click="tour.replay(pageTourId)"
   >
-    <img :src="DINO_SRC" alt="" width="112" height="112" />
+    <img :src="DINO_SRC" alt="" width="80" height="80" />
     <span>{{ pageLauncher }}</span>
   </button>
 
@@ -218,29 +224,42 @@ watch(
 <style scoped>
 .dino-launcher {
   position: fixed;
-  right: 1rem;
-  bottom: 1rem;
+  right: 0.85rem;
+  bottom: max(0.85rem, env(safe-area-inset-bottom));
   z-index: 40;
   display: flex;
+  flex-direction: column;
   align-items: flex-end;
-  gap: 0.35rem;
+  gap: 0.2rem;
   padding: 0;
   border: 0;
   background: transparent;
   cursor: pointer;
   color: var(--color-ink);
+  pointer-events: none;
+}
+
+.dino-launcher.is-dock-preview {
+  right: auto;
+  left: 0.85rem;
+  align-items: flex-start;
+}
+
+.dino-launcher img,
+.dino-launcher span {
+  pointer-events: auto;
 }
 
 .dino-launcher img {
-  width: 96px;
-  height: 96px;
+  width: 72px;
+  height: 72px;
   object-fit: contain;
   filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.28));
 }
 
 .dino-launcher span {
-  margin-bottom: 0.6rem;
-  max-width: 9.5rem;
+  margin: 0;
+  max-width: 10.5rem;
   border-radius: 16px;
   background: var(--dino-bubble, #3ecf4a);
   padding: 0.45rem 0.7rem;
@@ -347,6 +366,8 @@ watch(
 
 .dino-body {
   margin: 0.45rem 0 0;
+  max-height: 11.5rem;
+  overflow-y: auto;
   font-size: 0.9rem;
   line-height: 1.45;
 }
@@ -386,18 +407,17 @@ watch(
 }
 
 @media (max-width: 640px) {
-  .dino-launcher {
+  .dino-launcher,
+  .dino-launcher.is-dock-preview {
+    left: auto;
     right: 0.65rem;
     bottom: max(0.65rem, env(safe-area-inset-bottom));
+    align-items: flex-end;
   }
 
   .dino-launcher img {
-    width: 72px;
-    height: 72px;
-  }
-
-  .dino-launcher span {
-    display: none;
+    width: 64px;
+    height: 64px;
   }
 
   .dino-spot {
@@ -456,6 +476,7 @@ watch(
   }
 
   .dino-body {
+    max-height: 8.75rem;
     font-size: 0.84rem;
     line-height: 1.4;
   }

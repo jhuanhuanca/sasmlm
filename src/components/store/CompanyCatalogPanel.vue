@@ -111,6 +111,7 @@ function onFulfillment(product: Product, event: Event): void {
     :title="`Catálogo de ${companyName || 'empresa'}`"
     :body="`Eliges cuáles publicar. Puedes poner precio y moneda locales para tu tienda; la ficha de empresa no cambia. ${publishedCount} publicados de ${products.length}.`"
     flush
+    data-tour="store-company-catalog"
   >
     <p v-if="!companyName" class="px-5 py-8 text-sm text-muted">
       Esta cuenta no tiene empresa afiliada. El catálogo de empresa aparece cuando te registras con una marca.

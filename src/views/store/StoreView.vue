@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref, computed } from 'vue'
+import { onMounted, reactive, ref, computed, watch } from 'vue'
 import {
   assignInventory,
   createProduct,
@@ -38,6 +38,7 @@ import OrderVoucherThumb from '@/components/store/OrderVoucherThumb.vue'
 import SettingsBlock from '@/components/store/SettingsBlock.vue'
 import ReportExportBar from '@/components/reports/ReportExportBar.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useDinoTourStore } from '@/stores/dinoTour'
 import { useToast } from '@/composables/useToast'
 import { emptyDropshipping, hydrateDropshipping, type DropshippingSettings } from '@/data/shipping'
 import { emptyShopPayments, hydrateShopPayments, paymentMethodLabel, type ShopPayments } from '@/data/shopPayments'
@@ -49,6 +50,7 @@ import { errorMessage, fieldErrors } from '@/utils/http'
 import { fieldControlClass } from '@/utils/ui'
 
 const auth = useAuthStore()
+const tour = useDinoTourStore()
 const toast = useToast()
 const tab = ref<'products' | 'orders' | 'team' | 'settings'>('products')
 const shelf = ref<'company' | 'personal' | 'incentive'>('personal')
@@ -160,6 +162,33 @@ async function load(): Promise<void> {
     loading.value = false
   }
 }
+
+watch(
+  () => tour.current?.reveal,
+  (reveal) => {
+    if (!reveal) {
+      return
+    }
+    if (reveal === 'personal' || reveal === 'incentive' || reveal === 'company' || reveal === 'add-company') {
+      tab.value = 'products'
+      if (reveal === 'incentive' || reveal === 'company' || reveal === 'personal') {
+        shelf.value = reveal
+      }
+      return
+    }
+    if (reveal === 'orders') {
+      tab.value = 'orders'
+      return
+    }
+    if (reveal === 'settings') {
+      tab.value = 'settings'
+      return
+    }
+    if (reveal === 'team-stock') {
+      tab.value = 'team'
+    }
+  },
+)
 
 onMounted(() => {
   void load()
@@ -533,6 +562,7 @@ async function applyStoreTargetMargin(): Promise<void> {
         class="rounded-full border border-line bg-card px-4 py-2 text-sm"
         target="_blank"
         rel="noreferrer"
+        data-tour="store-public"
       >
         Ver pública
       </a>
@@ -651,7 +681,7 @@ async function applyStoreTargetMargin(): Promise<void> {
     </div>
 
     <div v-if="!loading && tab === 'products'" class="mt-6 space-y-5" data-tour="store-shelf">
-      <div class="flex flex-wrap items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2" data-tour="store-shelves">
         <button
           type="button"
           class="rounded-full px-4 py-2 text-sm"
@@ -836,7 +866,7 @@ async function applyStoreTargetMargin(): Promise<void> {
       </SettingsBlock>
     </div>
 
-    <SoftCard v-else-if="!loading && tab === 'orders'" :padded="false" class="mt-6 overflow-x-auto">
+    <SoftCard v-else-if="!loading && tab === 'orders'" :padded="false" class="mt-6 overflow-x-auto" data-tour="store-orders">
       <div class="flex flex-wrap items-center gap-3 px-5 py-4">
         <div class="flex gap-2 overflow-x-auto">
         <button
@@ -928,7 +958,7 @@ async function applyStoreTargetMargin(): Promise<void> {
       </table>
     </SoftCard>
 
-    <form v-else-if="!loading && tab === 'settings'" class="mt-6 space-y-4" @submit.prevent="saveStore">
+    <form v-else-if="!loading && tab === 'settings'" class="mt-6 space-y-4" data-tour="store-settings" @submit.prevent="saveStore">
       <SettingsBlock
         tone="yellow"
         icon="gear"
