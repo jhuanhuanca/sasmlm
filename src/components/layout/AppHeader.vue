@@ -17,6 +17,7 @@ type NavLink = {
   to: RouteLocationRaw
   name: string
   label: string
+  shortLabel?: string
   icon: IconName
   external?: boolean
 }
@@ -90,7 +91,7 @@ const links = computed((): NavLink[] => {
     ...(canLead.value
       ? ([
           { to: '/app/commissions', name: 'commissions', label: 'Comisiones', icon: 'wallet' },
-          { to: '/app/cierre', name: 'monthly-closing', label: 'Cierre de mes', icon: 'calendar' },
+          { to: '/app/cierre', name: 'monthly-closing', label: 'Cierre de mes', shortLabel: 'Cierre', icon: 'calendar' },
           { to: '/app/soporte', name: 'support', label: 'Soporte', icon: 'clipboard' },
         ] satisfies NavLink[])
       : []),
@@ -152,10 +153,10 @@ async function logout(): Promise<void> {
 
 <template>
   <header>
-    <div class="flex items-center gap-2 sm:gap-4">
+    <div class="flex items-stretch gap-2 sm:gap-3 lg:gap-4">
       <button
         type="button"
-        class="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line bg-card text-ink lg:hidden"
+        class="my-1 grid h-10 w-10 shrink-0 place-items-center self-center rounded-full border border-line bg-card text-ink lg:hidden"
         :aria-expanded="menuOpen"
         aria-label="Abrir menú"
         @click="menuOpen = !menuOpen"
@@ -163,30 +164,33 @@ async function logout(): Promise<void> {
         <AppIcon :name="menuOpen ? 'close' : 'menu'" :size="18" />
       </button>
 
-      <RouterLink to="/app" class="inline-flex min-w-0 items-center" aria-label="REXmlm">
-        <BrandLogo />
+      <RouterLink to="/app" class="my-1 inline-flex min-w-0 shrink-0 items-center self-center" aria-label="REXmlm">
+        <BrandLogo height-class="h-7 sm:h-8" />
       </RouterLink>
 
-      <nav class="hidden min-w-0 flex-1 items-center justify-center gap-1 text-[13px] text-ink lg:flex">
+      <nav
+        class="hide-scrollbar hidden min-w-0 flex-1 items-stretch justify-center gap-0 overflow-x-auto text-ink lg:flex"
+        aria-label="Secciones del panel"
+      >
         <RouterLink
           v-for="link in links"
           :key="link.name"
           :to="link.to"
           :target="link.external ? '_blank' : undefined"
           :rel="link.external ? 'noreferrer' : undefined"
-          class="inline-flex items-center gap-2 rounded-full py-1 pr-3.5 pl-1 transition"
+          class="inline-flex min-w-[4.5rem] shrink-0 flex-col items-center gap-1 border-b-2 px-2.5 pb-2 pt-0.5 text-center text-[11px] font-medium whitespace-nowrap transition xl:min-w-[5rem] xl:px-3 xl:text-[12px]"
           :class="
             isActive(link.name)
-              ? 'bg-charcoal text-on-charcoal dark:bg-yellow dark:text-on-yellow'
-              : 'hover:bg-white/70 dark:hover:bg-white/10'
+              ? 'border-charcoal text-ink dark:border-yellow'
+              : 'border-transparent text-muted hover:border-line hover:text-ink'
           "
         >
           <ClayTile :name="link.icon" size="xs" />
-          {{ link.label }}
+          {{ link.shortLabel ?? link.label }}
         </RouterLink>
       </nav>
 
-      <div class="ml-auto flex items-center gap-1.5 sm:gap-2">
+      <div class="ml-auto flex shrink-0 items-center gap-1.5 self-center sm:gap-2">
         <button
           v-if="pageTourId"
           type="button"
@@ -198,7 +202,7 @@ async function logout(): Promise<void> {
         </button>
         <RouterLink
           to="/app/profile"
-          class="hidden items-center gap-2 rounded-full border border-line bg-card py-1 pr-3 pl-1 text-[13px] text-ink hover:bg-white md:inline-flex dark:hover:bg-white/10"
+          class="hidden items-center gap-2 rounded-full border border-line bg-card py-1 pr-3 pl-1 text-[13px] text-ink hover:bg-white 2xl:inline-flex dark:hover:bg-white/10"
         >
           <ClayTile name="gear" size="xs" />
           Ajustes

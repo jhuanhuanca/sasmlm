@@ -356,6 +356,33 @@ function categoryLabel(product: Product): string {
   return product.category?.name || props.categories.find((item) => item.id === product.store_category_id)?.name || ''
 }
 
+function productChips(product: Product): Array<{ label: string; warn?: boolean }> {
+  const chips: Array<{ label: string; warn?: boolean }> = [
+    { label: product.fulfillment === 'dropship' && !product.stock ? 'Dropshipping' : `Bodega ${product.stock}` },
+  ]
+
+  if (product.allocated_remaining) {
+    chips.push({ label: `Equipo ${product.allocated_remaining}` })
+  }
+
+  chips.push({ label: product.is_active ? 'Activo' : 'Inactivo' })
+
+  if (product.is_published === false && !isIncentive.value) {
+    chips.push({ label: 'No publicado' })
+  }
+  if (product.is_low_stock) {
+    chips.push({ label: 'Stock bajo', warn: true })
+  } else if (product.is_expired) {
+    chips.push({ label: 'Vencido', warn: true })
+  } else if (product.is_expiring_soon) {
+    chips.push({ label: `Vence en ${product.days_until_expiry} día(s)`, warn: true })
+  } else if (product.expires_at) {
+    chips.push({ label: `Vence ${product.expires_at}` })
+  }
+
+  return chips
+}
+
 defineExpose({ resetForm })
 </script>
 
@@ -384,7 +411,7 @@ defineExpose({ resetForm })
               </option>
             </select>
           </SoftField>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <SoftField label="Moneda" :error="errors.currency?.[0]">
               <select v-model="form.currency" :class="fieldControlClass">
                 <option v-for="item in STORE_CURRENCIES" :key="item.code" :value="item.code">{{ item.label }}</option>
@@ -415,7 +442,7 @@ defineExpose({ resetForm })
             </SoftField>
           </div>
           <template v-if="!isIncentive">
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <SoftField label="Incentivo" :error="errors.incentive_product_id?.[0]">
                 <select v-model="form.incentive_product_id" :class="fieldControlClass">
                   <option value="">Sin incentivo</option>
@@ -487,7 +514,7 @@ defineExpose({ resetForm })
         title="Tus categorías"
         :body="isIncentive ? 'Opcional para agrupar incentivos.' : 'Solo de tu inventario personal. Borrar una deja los productos sin categoría.'"
       >
-        <form class="mb-3 flex gap-2" @submit.prevent="addCategory">
+        <form class="mb-3 flex flex-col gap-2 sm:flex-row" @submit.prevent="addCategory">
           <input
             v-model="newCategoryName"
             :class="fieldControlClass"
@@ -498,7 +525,7 @@ defineExpose({ resetForm })
         </form>
         <p v-if="!categories.length" class="text-sm text-muted">Aún no tienes categorías.</p>
         <ul v-else class="space-y-2">
-          <li v-for="category in categories" :key="category.id" class="flex items-center gap-2">
+          <li v-for="category in categories" :key="category.id" class="flex flex-col gap-2 sm:flex-row sm:items-center">
             <input
               v-if="renamingId === category.id"
               v-model="renameValue"
@@ -512,15 +539,17 @@ defineExpose({ resetForm })
                 · {{ category.products_count }}
               </span>
             </span>
-            <SoftButton v-if="renamingId === category.id" variant="outline" type="button" @click="saveRename">
-              Ok
-            </SoftButton>
-            <SoftButton v-else variant="outline" type="button" @click="startRename(category)">
-              Renombrar
-            </SoftButton>
-            <SoftButton variant="ghost" type="button" @click="emit('removeCategory', category.id)">
-              Eliminar
-            </SoftButton>
+            <div class="flex flex-wrap gap-2">
+              <SoftButton v-if="renamingId === category.id" variant="outline" type="button" class="!px-3 !py-2" @click="saveRename">
+                Ok
+              </SoftButton>
+              <SoftButton v-else variant="outline" type="button" class="!px-3 !py-2" @click="startRename(category)">
+                Renombrar
+              </SoftButton>
+              <SoftButton variant="ghost" type="button" class="!px-3 !py-2" @click="emit('removeCategory', category.id)">
+                Eliminar
+              </SoftButton>
+            </div>
           </li>
         </ul>
       </SettingsBlock>
@@ -551,7 +580,7 @@ defineExpose({ resetForm })
         "
         flush
       >
-        <div v-if="products.length" class="grid gap-2 border-b border-line px-5 py-3 text-xs sm:grid-cols-3">
+        <div v-if="products.length" class="grid grid-cols-3 gap-2 border-b border-line px-4 py-3 text-[11px] sm:px-5 sm:text-xs">
           <template v-for="row in totals" :key="row.currency">
             <p><span class="text-muted">Unidades {{ row.currency }}</span><br /><span class="font-medium">{{ row.stock }}</span></p>
             <p><span class="text-muted">Costo en bodega</span><br /><span class="font-medium">{{ money(row.cost, row.currency) }}</span></p>
@@ -590,43 +619,68 @@ defineExpose({ resetForm })
           {{ products.length ? 'No hay productos en este filtro.' : isIncentive ? 'Aún no hay incentivos.' : 'Aún no hay productos personales.' }}
         </div>
         <ul v-else class="divide-y divide-line">
-          <li v-for="product in visibleProducts" :key="product.id" class="flex items-center justify-between gap-4 px-5 py-4">
-            <div class="flex min-w-0 items-center gap-3">
+          <li v-for="product in visibleProducts" :key="product.id" class="px-4 py-4 sm:px-5">
+            <div class="flex gap-3">
               <img
                 v-if="product.image"
                 :src="product.image"
                 alt=""
-                class="h-12 w-12 shrink-0 rounded-lg object-cover"
+                class="h-14 w-14 shrink-0 rounded-xl object-cover"
               />
-              <div class="min-w-0">
-                <p class="font-medium">{{ product.name }}</p>
-                <p class="text-sm text-muted">
+              <div class="min-w-0 flex-1">
+                <p class="font-medium leading-tight text-ink">{{ product.name }}</p>
+                <p class="mt-0.5 text-sm text-muted">
                   <span v-if="categoryLabel(product)">{{ categoryLabel(product) }} · </span>
-                  <span v-if="!isIncentive">{{ money(product.price, product.currency) }} · </span>
-                  costo {{ money(product.purchase_cost, product.currency) }}
-                  <span v-if="!isIncentive">
-                    · venta {{ money(product.unit_cost, product.currency) }}
-                    · utilidad {{ money(product.unit_profit, product.currency) }}
-                    · margen {{ signedPercent(product.margin_percent) }}
-                  </span>
-                  <span v-if="product.incentive"> · incentivo {{ product.incentive.name }}</span>
-                  ·
-                  {{ product.fulfillment === 'dropship' && !product.stock ? 'dropshipping' : `bodega ${product.stock}` }}
-                  <span v-if="product.allocated_remaining"> · en equipo {{ product.allocated_remaining }}</span>
-                  ·
-                  {{ product.is_active ? 'activo' : 'inactivo' }}
-                  <span v-if="product.is_low_stock"> · stock bajo</span>
-                  <span v-else-if="product.is_expired"> · vencido</span>
-                  <span v-else-if="product.is_expiring_soon"> · vence en {{ product.days_until_expiry }} día(s)</span>
-                  <span v-else-if="product.expires_at"> · vence {{ product.expires_at }}</span>
-                  <span v-if="product.is_published === false"> · no publicado</span>
+                  <span v-if="!isIncentive">{{ money(product.price, product.currency) }}</span>
+                  <span v-else>Costo {{ money(product.purchase_cost, product.currency) }}</span>
+                </p>
+                <p v-if="product.incentive" class="mt-0.5 text-xs text-muted">
+                  Incentivo: {{ product.incentive.name }}
                 </p>
               </div>
             </div>
-            <div class="flex shrink-0 gap-2">
+            <dl
+              class="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4"
+              :class="isIncentive ? 'sm:grid-cols-2' : ''"
+            >
+              <div class="rounded-2xl bg-shell px-3 py-2">
+                <dt class="text-muted">Costo</dt>
+                <dd class="font-medium text-ink">{{ money(product.purchase_cost, product.currency) }}</dd>
+              </div>
+              <template v-if="!isIncentive">
+                <div class="rounded-2xl bg-shell px-3 py-2">
+                  <dt class="text-muted">Venta</dt>
+                  <dd class="font-medium text-ink">{{ money(product.unit_cost, product.currency) }}</dd>
+                </div>
+                <div class="rounded-2xl bg-shell px-3 py-2">
+                  <dt class="text-muted">Utilidad</dt>
+                  <dd class="font-medium text-ink">{{ money(product.unit_profit, product.currency) }}</dd>
+                </div>
+                <div class="rounded-2xl bg-shell px-3 py-2">
+                  <dt class="text-muted">Margen</dt>
+                  <dd class="font-medium text-ink">{{ signedPercent(product.margin_percent) }}</dd>
+                </div>
+              </template>
+              <div v-else class="rounded-2xl bg-shell px-3 py-2">
+                <dt class="text-muted">Valor</dt>
+                <dd class="font-medium text-ink">{{ money(product.price, product.currency) }}</dd>
+              </div>
+            </dl>
+            <div class="mt-3 flex flex-wrap gap-1.5">
+              <span
+                v-for="chip in productChips(product)"
+                :key="chip.label"
+                class="rounded-full px-2.5 py-1 text-[11px]"
+                :class="chip.warn ? 'bg-yellow/80 text-on-yellow' : 'bg-shell text-muted'"
+              >
+                {{ chip.label }}
+              </span>
+            </div>
+            <div class="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
               <SoftButton
                 v-if="!isIncentive && product.is_active && !product.is_expired && (product.fulfillment === 'dropship' || product.stock > 0)"
                 variant="yellow"
+                class="!px-3 !py-2"
                 @click="emit('sell', product)"
               >
                 Vender
@@ -634,13 +688,14 @@ defineExpose({ resetForm })
               <SoftButton
                 v-if="!isIncentive && (product.fulfillment !== 'dropship' || product.stock > 0)"
                 variant="outline"
+                class="!px-3 !py-2"
                 :disabled="!product.stock"
                 @click="emit('assign', product)"
               >
                 Asignar
               </SoftButton>
-              <SoftButton variant="outline" @click="edit(product)">Editar</SoftButton>
-              <SoftButton variant="ghost" @click="emit('remove', product.id)">Eliminar</SoftButton>
+              <SoftButton variant="outline" class="!px-3 !py-2" @click="edit(product)">Editar</SoftButton>
+              <SoftButton variant="ghost" class="!px-3 !py-2" @click="emit('remove', product.id)">Eliminar</SoftButton>
             </div>
           </li>
         </ul>

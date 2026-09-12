@@ -676,7 +676,7 @@ async function applyStoreTargetMargin(): Promise<void> {
         >
           Catálogo de empresa
         </button>
-        <SoftButton variant="yellow" class="ml-auto" :disabled="!sellableProducts.length" @click="openSale()">
+        <SoftButton variant="yellow" class="w-full sm:ml-auto sm:w-auto" :disabled="!sellableProducts.length" @click="openSale()">
           Registrar venta
         </SoftButton>
       </div>

@@ -35,7 +35,7 @@ const showAppFooter = computed(() => !String(route.path).startsWith('/app/landin
 
 <template>
   <div class="app-shell flex h-svh w-full flex-col overflow-hidden" :style="companyVars">
-    <div class="z-50 shrink-0 border-b border-line bg-shell px-4 py-3 sm:px-5 sm:py-4 md:px-8 lg:px-10" data-tour="app-nav">
+    <div class="z-50 shrink-0 border-b border-line bg-shell px-4 pt-2 sm:px-5 md:px-6 lg:px-8" data-tour="app-nav">
       <AppHeader />
     </div>
     <main

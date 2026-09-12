@@ -119,31 +119,34 @@ function onFulfillment(product: Product, event: Event): void {
       Aún no hay productos en el catálogo de {{ companyName }}. Administración los carga en el servicio de catálogo.
     </p>
     <ul v-else class="divide-y divide-line">
-      <li v-for="product in products" :key="product.id" class="flex flex-col gap-3 px-5 py-4 lg:flex-row lg:items-center">
-        <div class="flex min-w-0 flex-1 items-center gap-3">
+      <li v-for="product in products" :key="product.id" class="flex flex-col gap-3 px-4 py-4 sm:px-5">
+        <div class="flex min-w-0 items-center gap-3">
           <img
             v-if="product.image"
             :src="product.image"
             alt=""
-            class="h-12 w-12 shrink-0 rounded-lg object-cover"
+            class="h-14 w-14 shrink-0 rounded-xl object-cover"
           />
           <div class="min-w-0">
-            <p class="font-medium">{{ product.name }}</p>
-            <p class="text-sm text-muted">
+            <p class="font-medium leading-tight text-ink">{{ product.name }}</p>
+            <p class="mt-0.5 text-sm text-muted">
               {{ money(product.price, product.currency) }}
               <span v-if="product.technical_sheet"> · ficha técnica</span>
-              <span v-if="product.is_low_stock" class="text-ink"> · stock bajo ({{ product.stock }})</span>
-              <span v-else-if="product.is_expired"> · vencido</span>
-              <span v-else-if="product.is_expiring_soon"> · vence en {{ product.days_until_expiry }} día(s)</span>
+            </p>
+            <p v-if="product.is_low_stock" class="mt-1 text-xs font-medium text-ink">
+              Stock bajo ({{ product.stock }})
+            </p>
+            <p v-else-if="product.is_expired" class="mt-1 text-xs text-muted">Vencido</p>
+            <p v-else-if="product.is_expiring_soon" class="mt-1 text-xs text-muted">
+              Vence en {{ product.days_until_expiry }} día(s)
             </p>
           </div>
         </div>
-        <div class="flex flex-wrap items-end gap-2">
-          <SoftField label="Precio">
+        <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+          <SoftField label="Precio" class="min-w-0">
             <input
               :value="product.price"
               :class="fieldControlClass"
-              class="w-28"
               type="number"
               min="0"
               step="0.01"
@@ -151,33 +154,30 @@ function onFulfillment(product: Product, event: Event): void {
               @change="onPrice(product, $event)"
             />
           </SoftField>
-          <SoftField label="Moneda">
+          <SoftField label="Moneda" class="min-w-0">
             <select
               :value="product.currency"
               :class="fieldControlClass"
-              class="w-28"
               :disabled="savingId === product.id"
               @change="onCurrency(product, $event)"
             >
               <option v-for="item in STORE_CURRENCIES" :key="item.code" :value="item.code">{{ item.code }}</option>
             </select>
           </SoftField>
-          <SoftField label="Stock">
+          <SoftField label="Stock" class="min-w-0">
             <input
               :value="product.stock"
               :class="fieldControlClass"
-              class="w-24"
               type="number"
               min="0"
               :disabled="savingId === product.id"
               @change="onStock(product, $event)"
             />
           </SoftField>
-          <SoftField label="Entrega">
+          <SoftField label="Entrega" class="min-w-0">
             <select
               :value="product.fulfillment ?? 'dropship'"
               :class="fieldControlClass"
-              class="w-36"
               :disabled="savingId === product.id"
               @change="onFulfillment(product, $event)"
             >
@@ -185,11 +185,10 @@ function onFulfillment(product: Product, event: Event): void {
               <option value="stock">Mi stock</option>
             </select>
           </SoftField>
-          <SoftField label="Vence">
+          <SoftField label="Vence" class="col-span-2 min-w-0 sm:col-span-1">
             <input
               :value="expiryValue(product)"
               :class="fieldControlClass"
-              class="w-36"
               type="date"
               min="2000-01-01"
               max="2099-12-31"
@@ -198,9 +197,12 @@ function onFulfillment(product: Product, event: Event): void {
               @blur="commitExpiry(product)"
             />
           </SoftField>
+        </div>
+        <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           <SoftButton
             v-if="product.is_active && !product.is_expired && (product.fulfillment === 'dropship' || product.stock > 0)"
             variant="outline"
+            class="!px-3 !py-2"
             :disabled="savingId === product.id"
             @click="emit('sell', product)"
           >
@@ -208,6 +210,7 @@ function onFulfillment(product: Product, event: Event): void {
           </SoftButton>
           <SoftButton
             :variant="product.is_published ? 'yellow' : 'outline'"
+            class="!px-3 !py-2"
             :disabled="savingId === product.id"
             @click="emit('publish', product, !product.is_published)"
           >
