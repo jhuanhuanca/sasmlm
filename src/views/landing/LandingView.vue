@@ -13,6 +13,7 @@ import LandingHexField from '@/components/landing/LandingHexField.vue'
 import { parseBrandHex } from '@/utils/color'
 import { errorMessage } from '@/utils/http'
 import { fieldControlClass } from '@/utils/ui'
+import { digitsOnly, looksLikePhoneLabel } from '@/utils/whatsapp'
 
 const landing = ref<LandingSummary | null>(null)
 const loading = ref(true)
@@ -37,6 +38,7 @@ const form = reactive({
   background: '',
   logo: '',
   whatsapp: '',
+  whatsappLabel: '',
   reasonsPhoto: '',
   reasonsKicker: '',
   reasonsTitle: '',
@@ -79,6 +81,7 @@ const previewLanding = computed<LandingSummary | null>(() => {
       },
       logo: form.logo,
       whatsapp: form.whatsapp,
+      whatsapp_label: form.whatsappLabel,
       palette: {
         principal: packedHex(form.principal),
         complementarios: packedHex(form.complementarios),
@@ -116,9 +119,9 @@ const panelTitle = computed(() => {
     case 'subtitle':
       return 'Subtítulo'
     case 'cta':
-      return 'Botón amarillo'
+      return 'Botón de color'
     case 'whatsapp':
-      return 'WhatsApp'
+      return 'Botones de WhatsApp'
     case 'reasons_photo':
       return 'Segunda foto'
     case 'reasons_kicker':
@@ -129,14 +132,6 @@ const panelTitle = computed(() => {
       return 'Texto de Reasons'
     case 'reasons_benefits':
       return 'Lista de beneficios'
-    case 'headline':
-      return 'Titular'
-    case 'subtitle':
-      return 'Subtítulo'
-    case 'cta':
-      return 'Botón amarillo'
-    case 'whatsapp':
-      return 'WhatsApp'
     case 'blocks':
       return 'Añadir bloque'
     default:
@@ -162,9 +157,9 @@ const panelHint = computed(() => {
     case 'subtitle':
       return 'El párrafo debajo del titular.'
     case 'cta':
-      return 'Texto del botón amarillo. El clic abre tu WhatsApp.'
+      return 'Lo que se lee en el botón de color (el de al lado de «¿Aceptas el reto?»). El clic abre WhatsApp; el número va aparte.'
     case 'whatsapp':
-      return 'Código de país y número, sin + ni espacios. Ejemplo: 59168785473'
+      return 'El texto de la barra, el botón morado y el pie. El número solo sirve para abrir el chat, no se muestra.'
     case 'reasons_photo':
       return 'Foto dentro del segundo celular, en la sección de abajo. Independiente de la primera.'
     case 'reasons_kicker':
@@ -196,13 +191,21 @@ function hydrate(next: LandingSummary): void {
   form.heroTitle = next.content?.hero?.title ?? ''
   form.heroSubtitle = next.content?.hero?.subtitle ?? ''
   form.kicker = next.content?.hero?.kicker ?? ''
-  form.ctaLabel = next.content?.hero?.cta_label ?? ''
+  const rawCta = next.content?.hero?.cta_label ?? ''
+  const storedWhatsapp = next.whatsapp || next.content?.whatsapp || ''
   form.ctaHref = next.content?.hero?.cta_href ?? ''
   form.photo = next.content?.hero?.photo ?? ''
   form.background = next.content?.hero?.background ?? ''
   form.photoFrame = isLandingPhotoFrame(next.content?.hero?.frame) ? next.content.hero.frame : 'phone'
   form.logo = next.content?.logo ?? ''
-  form.whatsapp = next.whatsapp || next.content?.whatsapp || ''
+  form.whatsappLabel = next.content?.whatsapp_label ?? ''
+  if (looksLikePhoneLabel(rawCta)) {
+    form.ctaLabel = ''
+    form.whatsapp = storedWhatsapp || digitsOnly(rawCta)
+  } else {
+    form.ctaLabel = rawCta
+    form.whatsapp = storedWhatsapp
+  }
   const palette = next.content?.palette
   const company = next.company?.color_palette
   form.principal = [
@@ -255,7 +258,7 @@ function payload() {
         title: form.heroTitle,
         subtitle: form.heroSubtitle,
         kicker: form.kicker || undefined,
-        cta_label: form.ctaLabel,
+        cta_label: looksLikePhoneLabel(form.ctaLabel) ? '' : form.ctaLabel,
         cta_href: form.ctaHref,
         photo: form.photo || undefined,
         background: form.background || undefined,
@@ -273,6 +276,7 @@ function payload() {
       },
       logo: form.logo || undefined,
       whatsapp: form.whatsapp,
+      whatsapp_label: form.whatsappLabel || undefined,
       palette: {
         principal: packedHex(form.principal),
         complementarios: packedHex(form.complementarios),
@@ -543,13 +547,27 @@ function clearLogo(): void {
               <textarea v-model="form.heroSubtitle" :class="fieldControlClass" rows="4" />
             </SoftField>
 
-            <SoftField v-else-if="activeField === 'cta'" label="Texto del botón">
-              <input v-model="form.ctaLabel" :class="fieldControlClass" />
-            </SoftField>
+            <template v-else-if="activeField === 'cta'">
+              <SoftField label="Texto del botón" hint="Ejemplo: Conversa con Raquel">
+                <input v-model="form.ctaLabel" :class="fieldControlClass" placeholder="Conversa con Raquel" />
+              </SoftField>
+              <SoftField label="Número de WhatsApp" hint="Sin + ni espacios. Ahí se abre el chat.">
+                <input v-model="form.whatsapp" :class="fieldControlClass" placeholder="59168785473" inputmode="tel" />
+              </SoftField>
+            </template>
 
-            <SoftField v-else-if="activeField === 'whatsapp'" label="Número" hint="Sin + ni espacios.">
-              <input v-model="form.whatsapp" :class="fieldControlClass" placeholder="59168785473" inputmode="tel" />
-            </SoftField>
+            <template v-else-if="activeField === 'whatsapp'">
+              <SoftField label="Texto del botón" hint="Barra, botón morado y pie. Ejemplo: Conversa con Raquel">
+                <input
+                  v-model="form.whatsappLabel"
+                  :class="fieldControlClass"
+                  placeholder="Conversa con Raquel"
+                />
+              </SoftField>
+              <SoftField label="Número" hint="Sin + ni espacios. No se muestra en el botón.">
+                <input v-model="form.whatsapp" :class="fieldControlClass" placeholder="59168785473" inputmode="tel" />
+              </SoftField>
+            </template>
 
             <template v-else-if="activeField === 'reasons_photo'">
               <div v-if="form.reasonsPhoto" class="overflow-hidden rounded-xl border border-line">

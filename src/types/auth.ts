@@ -123,6 +123,7 @@ export interface LandingContent {
   }
   logo?: string
   whatsapp?: string
+  whatsapp_label?: string
   palette?: LandingPalette
   blocks?: LandingBlock[]
 }

@@ -169,10 +169,15 @@
   color: #fff;
   border-radius: 999px;
   padding: 0.65rem 1.15rem;
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
   text-decoration: none;
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .lp-burger {
@@ -678,6 +683,20 @@
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 1.75rem;
+}
+
+.lp-cta-row > .lp-hotspot {
+  display: inline-flex;
+}
+
+.lp-cta-row .lp-pill {
+  min-width: 240px;
+  min-height: 3.55rem;
+  box-sizing: border-box;
+  padding: 1.15rem 2rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
 }
 
 .lp-pill {

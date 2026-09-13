@@ -9,7 +9,7 @@ import type { CompanyBrand, LandingBlock, LandingEditField, LandingPhotoFrame, L
 import { isLandingPhotoFrame } from '@/data/landingLooks'
 import { landingThemeVars } from '@/utils/brand'
 import { firstName } from '@/utils/format'
-import { whatsappUrl } from '@/utils/whatsapp'
+import { looksLikePhoneLabel, whatsappUrl } from '@/utils/whatsapp'
 import '@/styles/landing.css'
 
 const props = withDefaults(
@@ -68,7 +68,22 @@ const subtitle = computed(() => {
   }
   return `${firstName(props.leader)} te abre una red y una tienda propia: deja de cambiar horas por un sueldo fijo.`
 })
-const shopLabel = computed(() => hero.value?.cta_label?.trim() || 'WhatsApp')
+const shopLabel = computed(() => {
+  const custom = hero.value?.cta_label?.trim() || ''
+  if (custom && !looksLikePhoneLabel(custom)) {
+    return custom
+  }
+  const name = firstName(props.leader)
+  return name ? `Conversa con ${name}` : 'Conversemos'
+})
+const waLabel = computed(() => {
+  const custom = props.landing?.content?.whatsapp_label?.trim() || ''
+  if (custom) {
+    return custom
+  }
+  const name = firstName(props.leader)
+  return name ? `Hablar con ${name}` : 'Hablar por WhatsApp'
+})
 const phonePhoto = computed(() => safeImage(hero.value?.photo))
 const heroBackground = computed(
   () => safeImage(hero.value?.background) || phonePhoto.value || (placeholders.value ? DEFAULT_HERO : ''),
@@ -240,7 +255,7 @@ onUnmounted(() => {
             <span v-else class="lp-link">Tienda</span>
           </nav>
 
-          <LandingHotspot hint="Cambiar WhatsApp" :editable="editable" :active="isActive('whatsapp')" @edit="edit('whatsapp')">
+          <LandingHotspot hint="Cambiar texto y WhatsApp" :editable="editable" :active="isActive('whatsapp')" @edit="edit('whatsapp')">
             <a
               v-if="!editable"
               :href="waHref"
@@ -249,11 +264,11 @@ onUnmounted(() => {
               rel="noreferrer"
             >
               <AppIcon name="whatsapp" :size="14" />
-              WhatsApp
+              {{ waLabel }}
             </a>
             <span v-else class="lp-shop-btn">
               <AppIcon name="whatsapp" :size="14" />
-              WhatsApp
+              {{ waLabel }}
             </span>
           </LandingHotspot>
 
@@ -324,7 +339,7 @@ onUnmounted(() => {
             <button type="button" class="lp-pill is-challenge" @click="goSection('test')">
               ¿Aceptas el reto?
             </button>
-            <LandingHotspot hint="Cambiar botón" :editable="editable" :active="isActive('cta')" @edit="edit('cta')">
+            <LandingHotspot hint="Cambiar texto del botón" :editable="editable" :active="isActive('cta')" @edit="edit('cta')">
               <a v-if="!editable" :href="waHref" class="lp-pill is-yellow" target="_blank" rel="noreferrer">
                 {{ shopLabel }}
               </a>
@@ -437,14 +452,14 @@ onUnmounted(() => {
             </ul>
           </LandingHotspot>
           <div class="lp-cta-row">
-            <LandingHotspot hint="Cambiar WhatsApp" :editable="editable" :active="isActive('whatsapp')" @edit="edit('whatsapp')">
+            <LandingHotspot hint="Cambiar texto y WhatsApp" :editable="editable" :active="isActive('whatsapp')" @edit="edit('whatsapp')">
               <a v-if="!editable" :href="waHref" class="lp-pill is-dark" target="_blank" rel="noreferrer">
                 <AppIcon name="whatsapp" :size="16" />
-                Hablar con {{ firstName(leader) || 'el líder' }}
+                {{ waLabel }}
               </a>
               <span v-else class="lp-pill is-dark">
                 <AppIcon name="whatsapp" :size="16" />
-                Hablar con {{ firstName(leader) || 'el líder' }}
+                {{ waLabel }}
               </span>
             </LandingHotspot>
           </div>
@@ -455,7 +470,7 @@ onUnmounted(() => {
     <footer class="lp-footer">
       <div class="lp-wrap flex flex-wrap items-center justify-between gap-3">
         <p>{{ pageTitle || leader }} · Landing oficial</p>
-        <a v-if="!editable" :href="waHref" target="_blank" rel="noreferrer">Escribir por WhatsApp</a>
+        <a v-if="!editable" :href="waHref" target="_blank" rel="noreferrer">{{ waLabel }}</a>
       </div>
     </footer>
 
