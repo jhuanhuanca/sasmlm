@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { storeToRefs } from 'pinia'
+import { fetchMe } from '@/api/auth'
 import ClayTile from '@/components/ui/ClayTile.vue'
 import ModuleBanner from '@/components/ui/ModuleBanner.vue'
 import SoftCard from '@/components/ui/SoftCard.vue'
 import { useAuthStore } from '@/stores/auth'
 import { firstName } from '@/utils/format'
 
-const { user } = storeToRefs(useAuthStore())
+const auth = useAuthStore()
+const { user, canSellLeaderInventory } = storeToRefs(auth)
 
 const leaderName = computed(() => user.value?.sponsor?.name || 'tu líder')
 const landingTo = computed(() => {
@@ -27,6 +29,12 @@ const storeTo = computed(() => {
     query: user.value?.id ? { ref: String(user.value.id) } : {},
   }
 })
+
+onMounted(() => {
+  void fetchMe()
+    .then((me) => auth.setUser(me))
+    .catch(() => undefined)
+})
 </script>
 
 <template>
@@ -40,12 +48,24 @@ const storeTo = computed(() => {
       :actions="[
         'Abre Herramientas para asesorar a un cliente.',
         'Comparte la landing y la tienda de tu líder (con tu referido).',
+        'Si tu líder te autoriza, vende de su inventario personal.',
         'Cuando estés listo, elige un plan en Volverse líder.',
       ]"
     />
     </div>
 
     <div class="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <RouterLink v-if="canSellLeaderInventory" to="/app/ventas" class="group" data-tour="partner-sales">
+        <SoftCard class="h-full transition group-hover:-translate-y-0.5">
+          <ClayTile name="bag" tone="mint" />
+          <h2 class="mt-4 text-lg font-semibold">Vender inventario del líder</h2>
+          <p class="mt-2 text-sm text-muted">
+            {{ leaderName }} te autorizó a vender de su inventario personal. El stock se descuenta de su bodega.
+          </p>
+          <p class="mt-4 text-sm font-medium">Abrir ventas →</p>
+        </SoftCard>
+      </RouterLink>
+
       <RouterLink to="/app/tools" class="group" data-tour="partner-tools">
         <SoftCard class="h-full transition group-hover:-translate-y-0.5">
           <ClayTile name="heart" tone="mint" />

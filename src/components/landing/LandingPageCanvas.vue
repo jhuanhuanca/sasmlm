@@ -6,7 +6,7 @@ import LandingIncomeTest from '@/components/landing/LandingIncomeTest.vue'
 import LandingPhone from '@/components/landing/LandingPhone.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import type { CompanyBrand, LandingBlock, LandingEditField, LandingPhotoFrame, LandingSummary } from '@/types/auth'
-import { isLandingPhotoFrame } from '@/data/landingLooks'
+import { DEFAULT_LANDING_BENEFITS, isLandingPhotoFrame } from '@/data/landingLooks'
 import { landingThemeVars } from '@/utils/brand'
 import { firstName } from '@/utils/format'
 import { looksLikePhoneLabel, whatsappUrl } from '@/utils/whatsapp'
@@ -42,15 +42,6 @@ const menuOpen = ref(false)
 const scrolled = ref(false)
 const section = ref<'home' | 'test'>('home')
 
-const DEFAULT_BENEFITS = [
-  'Fácil de usar',
-  'Tienda propia',
-  'Ingreso residual',
-  'Red que escala',
-  'Formación',
-  'Acompañamiento',
-]
-
 const hero = computed(() => props.landing?.content?.hero)
 const reasons = computed(() => props.landing?.content?.reasons)
 const blocks = computed<LandingBlock[]>(() => props.landing?.content?.blocks ?? [])
@@ -81,7 +72,7 @@ const waLabel = computed(() => {
   if (custom) {
     return custom
   }
-  const name = firstName(props.leader)
+  const name = props.leader.trim()
   return name ? `Hablar con ${name}` : 'Hablar por WhatsApp'
 })
 const phonePhoto = computed(() => safeImage(hero.value?.photo))
@@ -113,10 +104,7 @@ const reasonsBody = computed(() => {
 })
 const reasonsBenefits = computed(() => {
   const items = (reasons.value?.benefits ?? []).map((item) => item.trim()).filter(Boolean)
-  if (items.length) {
-    return items
-  }
-  return placeholders.value ? DEFAULT_BENEFITS : []
+  return items.length ? items : DEFAULT_LANDING_BENEFITS
 })
 const heroPhotoStyle = computed(() =>
   isSafeImageUrl(heroBackground.value) ? { '--lp-hero-photo': `url("${heroBackground.value}")` } : {},

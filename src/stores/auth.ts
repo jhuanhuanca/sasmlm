@@ -16,6 +16,15 @@ export const useAuthStore = defineStore('auth', () => {
   const isPartner = computed(() => roles.value.includes('partner'))
   const isAdmin = computed(() => roles.value.includes('admin'))
   const isPartnerOnly = computed(() => isPartner.value && !isLeader.value && !isAdmin.value)
+  const canSellLeaderInventory = computed(() => Boolean(user.value?.can_sell_leader_inventory))
+  const entitlements = computed(() => user.value?.billing?.entitlements ?? null)
+  const hasPaidAccess = computed(() => {
+    if (!isLeader.value || isAdmin.value) {
+      return true
+    }
+    const paid = user.value?.billing?.has_paid_access
+    return paid !== false
+  })
   const primaryRole = computed(() => roles.value[0] ?? 'partner')
 
   function persistSession(nextUser: AuthUser, nextToken: string): void {
@@ -81,6 +90,9 @@ export const useAuthStore = defineStore('auth', () => {
     isLeader,
     isPartner,
     isPartnerOnly,
+    canSellLeaderInventory,
+    entitlements,
+    hasPaidAccess,
     isAdmin,
     primaryRole,
     login,

@@ -34,3 +34,11 @@ export async function fetchMe(): Promise<AuthUser> {
   const payload = await api<AuthUser | LaravelData<AuthUser>>('/auth/me')
   return unwrapData(payload)
 }
+
+export async function updatePassword(body: {
+  current_password?: string
+  password: string
+  password_confirmation: string
+}): Promise<void> {
+  await api('/auth/password', { method: 'PUT', body })
+}

@@ -78,6 +78,7 @@ export interface ReferralRow {
   rank_name?: string | null
   invite_pending?: boolean
   can_convert?: boolean
+  can_sell_inventory?: boolean
   referred?: {
     id: number | null
     name: string | null
@@ -210,10 +211,13 @@ export interface Plan {
   name: string
   slug: string
   price: number | string
+  intro_price?: number | string
   currency: string
   interval: string
   commission_percentage: number | string
   features: string[] | Record<string, unknown> | null
+  entitlements?: Record<string, unknown>
+  recommended?: boolean
   is_active: boolean
 }
 

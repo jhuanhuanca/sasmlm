@@ -8,6 +8,11 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/public/MarketingHomeView.vue'),
   },
   {
+    path: '/captacion',
+    name: 'capture',
+    component: () => import('@/views/public/CaptureLandingView.vue'),
+  },
+  {
     path: '/login',
     name: 'login',
     component: () => import('@/views/auth/LoginView.vue'),
@@ -39,42 +44,49 @@ const routes: RouteRecordRaw[] = [
         path: 'team',
         name: 'team',
         component: () => import('@/views/team/TeamView.vue'),
-        meta: { leaderOnly: true },
+        meta: { leaderOnly: true, planFeature: 'team' },
       },
       {
         path: 'team/:id',
         name: 'team-member',
         component: () => import('@/views/team/TeamMemberView.vue'),
-        meta: { leaderOnly: true },
+        meta: { leaderOnly: true, planFeature: 'team' },
       },
       {
         path: 'invitations',
         name: 'invitations',
         component: () => import('@/views/invitations/InvitationsView.vue'),
-        meta: { leaderOnly: true },
+        meta: { leaderOnly: true, planFeature: 'team' },
       },
       {
         path: 'store',
         name: 'store',
         component: () => import('@/views/store/StoreView.vue'),
-        meta: { leaderOnly: true },
+        meta: { leaderOnly: true, planFeature: 'store' },
       },
       {
         path: 'landing',
         name: 'landing',
         component: () => import('@/views/landing/LandingView.vue'),
-        meta: { leaderOnly: true },
+        meta: { leaderOnly: true, planFeature: 'landing' },
       },
       {
         path: 'become-leader',
         name: 'become-leader',
         component: () => import('@/views/dashboard/BecomeLeaderView.vue'),
-        meta: { partnerOnly: true },
+        meta: { billing: true },
+      },
+      {
+        path: 'ventas',
+        name: 'partner-sales',
+        component: () => import('@/views/store/PartnerSalesView.vue'),
+        meta: { sellGrantOnly: true },
       },
       {
         path: 'tools',
         name: 'tools',
         component: () => import('@/views/tools/ToolsView.vue'),
+        meta: { planFeature: 'tools' },
       },
       {
         path: 'tools/wellness',
@@ -111,7 +123,7 @@ const routes: RouteRecordRaw[] = [
         path: 'cierre',
         name: 'monthly-closing',
         component: () => import('@/views/reports/MonthlyClosingView.vue'),
-        meta: { leaderOnly: true },
+        meta: { leaderOnly: true, planFeature: 'closing' },
       },
       {
         path: 'reports',
@@ -192,8 +204,34 @@ router.beforeEach(async (to) => {
     return { name: 'dashboard' }
   }
 
+  if (to.meta.billing) {
+    const canPay = auth.isPartnerOnly || (auth.isLeader && !auth.hasPaidAccess) || auth.isAdmin
+    if (!canPay) {
+      return { name: 'dashboard' }
+    }
+  }
+
   if (to.meta.partnerOnly && !auth.isPartnerOnly) {
     return { name: 'dashboard' }
+  }
+
+  if (to.meta.sellGrantOnly && !auth.canSellLeaderInventory) {
+    return { name: 'dashboard' }
+  }
+
+  if (String(to.path).startsWith('/app/tools')) {
+    const flags = auth.entitlements
+    if (flags && flags.tools === false) {
+      return { name: auth.hasPaidAccess ? 'dashboard' : 'become-leader' }
+    }
+  }
+
+  const feature = to.meta.planFeature
+  if (typeof feature === 'string') {
+    const flags = auth.entitlements
+    if (flags && flags[feature as keyof typeof flags] === false) {
+      return { name: auth.hasPaidAccess ? 'dashboard' : 'become-leader' }
+    }
   }
 
   return true

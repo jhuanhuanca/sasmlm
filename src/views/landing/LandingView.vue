@@ -7,8 +7,9 @@ import SoftCard from '@/components/ui/SoftCard.vue'
 import SoftField from '@/components/ui/SoftField.vue'
 import ModuleBanner from '@/components/ui/ModuleBanner.vue'
 import { useToast } from '@/composables/useToast'
+import { useAuthStore } from '@/stores/auth'
 import type { LandingBlock, LandingEditField, LandingPhotoFrame, LandingSummary } from '@/types/auth'
-import { LANDING_PHOTO_FRAMES, isLandingPhotoFrame } from '@/data/landingLooks'
+import { DEFAULT_LANDING_BENEFITS, LANDING_PHOTO_FRAMES, isLandingPhotoFrame } from '@/data/landingLooks'
 import LandingHexField from '@/components/landing/LandingHexField.vue'
 import { parseBrandHex } from '@/utils/color'
 import { errorMessage } from '@/utils/http'
@@ -22,6 +23,7 @@ const uploading = ref(false)
 const message = ref('')
 const activeField = ref<LandingEditField | null>(null)
 const toast = useToast()
+const auth = useAuthStore()
 const photoInput = ref<HTMLInputElement | null>(null)
 const backgroundInput = ref<HTMLInputElement | null>(null)
 const reasonsInput = ref<HTMLInputElement | null>(null)
@@ -50,6 +52,23 @@ const form = reactive({
   blocks: [] as LandingBlock[],
 })
 
+function listedBenefits(): string[] {
+  const items = form.reasonsBenefits
+    .split('\n')
+    .map((item) => item.trim())
+    .filter(Boolean)
+  return items.length ? items : [...DEFAULT_LANDING_BENEFITS]
+}
+
+function listedWhatsappLabel(): string {
+  const custom = form.whatsappLabel.trim()
+  if (custom) {
+    return custom
+  }
+  const name = (auth.user?.name || form.title).trim()
+  return name ? `Hablar con ${name}` : 'Hablar por WhatsApp'
+}
+
 const previewLanding = computed<LandingSummary | null>(() => {
   if (!landing.value) {
     return null
@@ -74,14 +93,11 @@ const previewLanding = computed<LandingSummary | null>(() => {
         kicker: form.reasonsKicker,
         title: form.reasonsTitle,
         body: form.reasonsBody,
-        benefits: form.reasonsBenefits
-          .split('\n')
-          .map((item) => item.trim())
-          .filter(Boolean),
+        benefits: listedBenefits(),
       },
       logo: form.logo,
       whatsapp: form.whatsapp,
-      whatsapp_label: form.whatsappLabel,
+      whatsapp_label: listedWhatsappLabel(),
       palette: {
         principal: packedHex(form.principal),
         complementarios: packedHex(form.complementarios),
@@ -91,7 +107,15 @@ const previewLanding = computed<LandingSummary | null>(() => {
   }
 })
 
-const previewLeader = computed(() => landing.value?.owner_name || form.title)
+const previewLeader = computed(() => {
+  const owner = landing.value?.owner_name?.trim() || ''
+  const title = form.title.trim()
+  const account = auth.user?.name?.trim() || ''
+  if (owner && owner !== title) {
+    return owner
+  }
+  return account || owner || title
+})
 const previewStoreSlug = computed(() => landing.value?.store_slug || landing.value?.slug || '')
 const blockIndex = computed(() => {
   if (!activeField.value?.startsWith('block:')) {
@@ -221,7 +245,8 @@ function hydrate(next: LandingSummary): void {
   form.reasonsKicker = next.content?.reasons?.kicker ?? ''
   form.reasonsTitle = next.content?.reasons?.title ?? ''
   form.reasonsBody = next.content?.reasons?.body ?? ''
-  form.reasonsBenefits = (next.content?.reasons?.benefits ?? []).filter(Boolean).join('\n')
+  const loadedBenefits = (next.content?.reasons?.benefits ?? []).filter(Boolean)
+  form.reasonsBenefits = (loadedBenefits.length ? loadedBenefits : DEFAULT_LANDING_BENEFITS).join('\n')
   form.blocks = [...(next.content?.blocks ?? [])]
 }
 
@@ -269,14 +294,11 @@ function payload() {
         kicker: form.reasonsKicker || undefined,
         title: form.reasonsTitle || undefined,
         body: form.reasonsBody || undefined,
-        benefits: form.reasonsBenefits
-          .split('\n')
-          .map((item) => item.trim())
-          .filter(Boolean),
+        benefits: listedBenefits(),
       },
       logo: form.logo || undefined,
       whatsapp: form.whatsapp,
-      whatsapp_label: form.whatsappLabel || undefined,
+      whatsapp_label: listedWhatsappLabel(),
       palette: {
         principal: packedHex(form.principal),
         complementarios: packedHex(form.complementarios),

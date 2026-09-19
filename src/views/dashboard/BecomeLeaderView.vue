@@ -20,35 +20,30 @@ const saving = ref(false)
 const message = ref('')
 const toast = useToast()
 
+const monthly = computed(() => plans.value.filter((plan) => plan.interval === 'month'))
 const selected = computed(() => plans.value.find((plan) => plan.id === selectedId.value) ?? null)
 
-function intervalLabel(interval: string): string {
-  if (interval === 'year') {
-    return 'al año'
+function entitlementLines(plan: Plan): string[] {
+  const e = plan.entitlements as Record<string, unknown> | undefined
+  if (!e) {
+    return []
   }
-  if (interval === 'week') {
-    return 'a la semana'
-  }
-
-  return 'al mes'
-}
-
-function featuresOf(plan: Plan): string[] {
-  if (Array.isArray(plan.features)) {
-    return plan.features.map(String)
-  }
-
-  if (plan.features && typeof plan.features === 'object') {
-    return Object.values(plan.features).map(String)
-  }
-
-  return []
+  const lines: string[] = []
+  lines.push(e.landing ? 'Landing propia' : 'Sin landing')
+  lines.push(e.store ? 'Tienda, inventario y POS' : 'Sin tienda propia (vitrina del upline)')
+  lines.push(e.tools ? 'IMC, flyers y bienestar' : 'Sin herramientas de catálogo')
+  lines.push(e.partner_sell ? 'Los socios pueden vender tu inventario' : 'Los socios no venden tu inventario')
+  const max = e.max_partners
+  lines.push(max ? `Hasta ${max} socios en red` : 'Sin tope práctico de socios')
+  lines.push(Number(e.extra_companies) > 0 ? '1 marca extra incluida' : 'Marca extra: US$ 15/mes')
+  return lines
 }
 
 onMounted(async () => {
   try {
     plans.value = await fetchPlans()
-    selectedId.value = plans.value[0]?.id ?? null
+    const recommended = monthly.value.find((plan) => plan.recommended) ?? monthly.value[0] ?? plans.value[0]
+    selectedId.value = recommended?.id ?? null
   } catch (error) {
     message.value = errorMessage(error, 'No se pudieron cargar los planes')
   } finally {
@@ -87,17 +82,18 @@ async function subscribe(): Promise<void> {
 </script>
 
 <template>
-  <div class="max-w-3xl">
+  <div class="max-w-4xl">
     <div data-tour="plan-welcome">
     <ModuleBanner
       icon="star"
-      eyebrow="Socio"
-      title="Volverse líder"
-      body="Elige un plan y paga la suscripción de la plataforma con Paddle. Las ventas de tu tienda siguen con QR, transferencia o depósito: eso no pasa por Paddle."
+      eyebrow="Suscripción"
+      title="Elige tu paquete"
+      body="El primer mes por US$ 1, con tarjeta. Desde el segundo, Paddle cobra el precio de lista en automático. El socio sigue en US$ 0. WhatsApp y chatbot van aparte, más adelante."
       :actions="[
-        'Compara los planes y lo que incluye cada uno.',
-        'Suscríbete: se crea tu red y dejas de ser solo socio.',
-        'Luego invita a tu primer socio desde Equipo.',
+        'Básico: red y landing. Sin tienda ni herramientas.',
+        'Intermedio: tienda, inventario y que tus socios vendan.',
+        'Premium: una marca extra incluida y soporte prioritario.',
+        'Tarjeta obligatoria el día 1. Avisamos 2 días antes del cobro.',
       ]"
     />
     </div>
@@ -108,9 +104,9 @@ async function subscribe(): Promise<void> {
       No hay planes activos. Pide a administración que publique uno.
     </p>
 
-    <div v-else class="mt-8 grid gap-4 md:grid-cols-2" data-tour="plan-grid">
+    <div v-else class="mt-8 grid gap-4 md:grid-cols-3" data-tour="plan-grid">
       <button
-        v-for="plan in plans"
+        v-for="plan in monthly.length ? monthly : plans"
         :key="plan.id"
         type="button"
         class="rounded-card border p-5 text-left transition"
@@ -121,13 +117,17 @@ async function subscribe(): Promise<void> {
         "
         @click="selectedId = plan.id"
       >
-        <p class="text-lg font-semibold">{{ plan.name }}</p>
-        <p class="mt-2 font-display text-3xl font-bold">
-          {{ money(plan.price, plan.currency) }}
-          <span class="text-sm font-normal text-muted">{{ intervalLabel(plan.interval) }}</span>
+        <p class="text-xs uppercase tracking-wide text-muted">
+          {{ plan.recommended ? 'Recomendado' : plan.name }}
         </p>
-        <ul v-if="featuresOf(plan).length" class="mt-4 space-y-1 text-sm text-muted">
-          <li v-for="feature in featuresOf(plan)" :key="feature">{{ feature }}</li>
+        <p class="text-lg font-semibold">{{ plan.name }}</p>
+        <p class="mt-2 text-sm text-muted">El primer mes por {{ money(plan.intro_price ?? 1, plan.currency) }}</p>
+        <p class="mt-1 font-display text-3xl font-bold">
+          {{ money(plan.price, plan.currency) }}
+          <span class="text-sm font-normal text-muted">desde el mes 2</span>
+        </p>
+        <ul class="mt-4 space-y-1 text-sm text-muted">
+          <li v-for="line in entitlementLines(plan)" :key="line">{{ line }}</li>
         </ul>
       </button>
     </div>
@@ -135,11 +135,12 @@ async function subscribe(): Promise<void> {
     <div v-if="selected" class="mt-6">
       <SoftCard>
         <p class="text-sm text-muted">
-          Al suscribirte dejas de ser solo socio: tendrás tu propio equipo y podrás invitar a otros.
+          Al pagar dejas tarjeta en Paddle. El siguiente ciclo cobra
+          {{ money(selected.price, selected.currency) }} si no cancelas antes.
         </p>
         <div class="mt-4">
           <SoftButton :disabled="saving" @click="subscribe">
-            {{ saving ? 'Redirigiendo a Paddle…' : `Pagar ${selected.name} con Paddle` }}
+            {{ saving ? 'Redirigiendo a Paddle…' : `Empezar ${selected.name} por US$ 1` }}
           </SoftButton>
         </div>
       </SoftCard>

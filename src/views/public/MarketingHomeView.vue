@@ -65,6 +65,69 @@ const stats = [
   { title: 'IA + futuro', text: 'para añadir automatizaciones conforme crece tu negocio.' },
 ]
 
+const packs = [
+  {
+    kicker: 'Red',
+    name: 'Básico',
+    price: 29,
+    annual: 290,
+    blurb: 'Para armar red y landing. Sin tienda propia.',
+    cta: 'Empezar Básico',
+    featured: false,
+    items: [
+      { on: true, text: 'Equipo, invitaciones y CRM' },
+      { on: true, text: 'Landing propia' },
+      { on: true, text: 'Cierre de mes: resumen' },
+      { on: true, text: '1 empresa de catálogo' },
+      { on: true, text: 'Hasta 50 socios en red' },
+      { on: true, text: 'Soporte estándar' },
+      { on: false, text: 'Herramientas (IMC, flyers, bienestar)' },
+      { on: false, text: 'Tienda, inventario y POS' },
+      { on: false, text: 'Socios venden tu inventario' },
+      { on: false, text: 'Marca extra: add-on US$ 15/mes' },
+    ],
+  },
+  {
+    kicker: 'Venta',
+    name: 'Intermedio',
+    price: 49,
+    annual: 490,
+    blurb: 'El plan de trabajo: quien vende producto necesita tienda.',
+    cta: 'Elegir Intermedio',
+    featured: true,
+    items: [
+      { on: true, text: 'Equipo, invitaciones, CRM y landing' },
+      { on: true, text: 'Herramientas (IMC, flyers, bienestar)' },
+      { on: true, text: 'Tienda, inventario y POS' },
+      { on: true, text: 'Socios venden inventario del líder' },
+      { on: true, text: 'Cierre de mes completo' },
+      { on: true, text: '1 empresa de catálogo' },
+      { on: true, text: 'Hasta 500 socios en red' },
+      { on: true, text: 'Soporte estándar' },
+      { on: false, text: 'Marca extra: add-on US$ 15/mes' },
+      { on: false, text: 'WhatsApp / chatbot (add-on futuro)' },
+    ],
+  },
+  {
+    kicker: 'Dos marcas',
+    name: 'Premium',
+    price: 69,
+    annual: 690,
+    blurb: 'Evita el add-on de marca si ya operas dos empresas.',
+    cta: 'Elegir Premium',
+    featured: false,
+    items: [
+      { on: true, text: 'Todo lo de Intermedio' },
+      { on: true, text: 'Cierre completo + prioridad' },
+      { on: true, text: 'Sin tope práctico de socios' },
+      { on: true, text: 'Principal + 1 marca extra incluida' },
+      { on: true, text: 'Siguientes marcas: US$ 15/mes' },
+      { on: true, text: 'Soporte prioritario' },
+      { on: false, text: 'WhatsApp / chatbot (add-on futuro)' },
+    ],
+  },
+]
+
 function closeMenu(): void {
   menuOpen.value = false
 }
@@ -269,45 +332,31 @@ async function submitContact(): Promise<void> {
         <span class="mk-kicker">Suscripciones flexibles</span>
         <h2 class="mk-h2">Elige el ritmo que necesita tu negocio</h2>
         <p class="mk-lead" style="margin-inline: auto">
-          Comienza con lo esencial y desbloquea más capacidad conforme tu red y tus procesos evolucionan.
+          Tres paquetes de líder. El primer mes por US$ 1, con tarjeta. Desde el segundo, Paddle cobra el precio de lista. El socio de red sigue en US$ 0.
         </p>
       </div>
       <div class="mk-plans">
-        <article class="mk-plan">
-          <p class="mk-plan-kicker">Inicio</p>
-          <h3>Esencial</h3>
-          <p>Para comenzar a ordenar tu operación y tus conversaciones.</p>
+        <article v-for="pack in packs" :key="pack.name" class="mk-plan" :class="{ 'is-featured': pack.featured }">
+          <span v-if="pack.featured" class="mk-badge">Más elegido</span>
+          <p class="mk-plan-kicker">{{ pack.kicker }}</p>
+          <h3>{{ pack.name }}</h3>
+          <p class="mk-plan-intro">El primer mes por US$ 1</p>
+          <p class="mk-plan-price">
+            US$ {{ pack.price }}
+            <span> / mes</span>
+          </p>
+          <p class="mk-plan-annual">Anual US$ {{ pack.annual }}</p>
+          <p>{{ pack.blurb }}</p>
           <ul class="mk-checks">
-            <li>Catálogo de productos</li>
-            <li>CRM básico</li>
-            <li>Seguimiento de ciclos</li>
+            <li v-for="item in pack.items" :key="item.text" :class="{ 'is-off': !item.on }">{{ item.text }}</li>
           </ul>
-          <RouterLink class="mk-btn mt-6 w-full" to="/register">Solicitar acceso</RouterLink>
-        </article>
-        <article class="mk-plan is-featured">
-          <span class="mk-badge">Más elegido</span>
-          <p class="mk-plan-kicker">Impulso</p>
-          <h3>Profesional</h3>
-          <p>Para líderes que desean crear procesos consistentes para su equipo.</p>
-          <ul class="mk-checks">
-            <li>Todo lo del plan Esencial</li>
-            <li>Herramientas adaptadas</li>
-            <li>Beneficios por referidos</li>
-          </ul>
-          <RouterLink class="mk-btn mt-6 w-full" to="/register">Elegir Profesional</RouterLink>
-        </article>
-        <article class="mk-plan">
-          <p class="mk-plan-kicker">Evolución</p>
-          <h3>Escala</h3>
-          <p>Para una visión de crecimiento continuo con nuevas capacidades.</p>
-          <ul class="mk-checks">
-            <li>Todo lo del plan Profesional</li>
-            <li>Prioridad en nuevas herramientas</li>
-            <li>Automatizaciones IA futuras</li>
-          </ul>
-          <RouterLink class="mk-btn mt-6 w-full" to="/register">Quiero escalar</RouterLink>
+          <RouterLink class="mk-btn mt-6 w-full" to="/register">{{ pack.cta }}</RouterLink>
         </article>
       </div>
+      <p class="mk-plan-footnote">
+        Comisión al referidor: 10 % solo en el primer cobro de lista (no en el US$ 1 ni en marcas extra).
+        WhatsApp Cloud API y chatbot van como add-on más adelante.
+      </p>
     </section>
 
     <section class="mk-wrap mk-cta-band">

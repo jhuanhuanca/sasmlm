@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { createInvitation } from '@/api/invitations'
 import { convertCompanyPartner, fetchTeamRoster, registerCompanyPartner } from '@/api/dashboard'
 import CompanyScopeBar from '@/components/company/CompanyScopeBar.vue'
@@ -40,6 +40,7 @@ const created = ref<InvitationCreated | null>(null)
 const filter = ref<'all' | 'partners' | 'leaders' | 'company' | 'follow_up'>('all')
 const toast = useToast()
 const tour = useDinoTourStore()
+const router = useRouter()
 const email = ref('')
 const companyForm = reactive({
   name: '',
@@ -116,6 +117,25 @@ function displayEmail(row: ReferralRow): string {
 
 function isOverdue(row: ReferralRow): boolean {
   return Boolean(row.follow_up_at && new Date(row.follow_up_at).getTime() <= now)
+}
+
+function fichaId(row: ReferralRow): number | null {
+  if (kindOf(row) === 'company') {
+    return null
+  }
+
+  const id = Number(row.referral_id ?? row.id)
+
+  return Number.isFinite(id) && id > 0 ? id : null
+}
+
+function openFicha(row: ReferralRow): void {
+  const id = fichaId(row)
+  if (!id) {
+    return
+  }
+
+  void router.push({ name: 'team-member', params: { id } })
 }
 
 async function load(): Promise<void> {
@@ -247,7 +267,7 @@ async function copyLink(): Promise<void> {
       body="Tres tipos, sin mezclar: socio (aún no paga plan), líder (ya tiene suscripción) y socio de empresa (red de tu marca). Las ventas de la tabla son de tu tienda, no el PV."
       :actions="[
         'Invita un socio de plataforma o registra uno de empresa a mano.',
-        'Convierte un socio de empresa a socio para que luego pueda volverse líder.',
+        'En cada socio o líder, pulsa Ver ficha para CRM y para autorizar ventas de tu inventario.',
         'Filtra por color y tipo. El seguimiento CRM es solo de la red de plataforma.',
       ]"
     >
@@ -448,18 +468,19 @@ async function copyLink(): Promise<void> {
           >
             <td class="px-5 py-4">
               <RouterLink
-                v-if="kindOf(row) !== 'company' && row.referral_id"
-                :to="{ name: 'team-member', params: { id: row.referral_id } }"
-                class="inline-flex items-center gap-2 font-medium hover:underline"
+                v-if="fichaId(row)"
+                :to="{ name: 'team-member', params: { id: fichaId(row) } }"
+                class="inline-flex items-center gap-2 font-medium text-ink underline decoration-line underline-offset-4 hover:decoration-ink"
               >
                 <ClayTile :name="kindTile(kindOf(row)).name" :tone="kindTile(kindOf(row)).tone" size="sm" />
                 {{ displayName(row) }}
               </RouterLink>
               <p v-else class="inline-flex items-center gap-2 font-medium">
-                <ClayTile name="users" tone="royal" size="sm" />
+                <ClayTile :name="kindTile(kindOf(row)).name" :tone="kindTile(kindOf(row)).tone" size="sm" />
                 {{ displayName(row) }}
               </p>
               <p class="pl-10 text-muted">{{ displayEmail(row) }}</p>
+              <p v-if="row.can_sell_inventory" class="pl-10 text-xs text-muted">Puede vender de tu inventario</p>
               <p v-if="row.company_code" class="pl-10 text-xs text-muted">Código {{ row.company_code }}</p>
             </td>
             <td class="px-5 py-4">
@@ -492,14 +513,19 @@ async function copyLink(): Promise<void> {
             </td>
             <td class="px-5 py-4">{{ formatDate(row.created_at) }}</td>
             <td class="px-5 py-4">
-              <SoftButton
-                v-if="row.can_convert"
-                variant="outline"
-                :disabled="convertingId === row.organization_member_id"
-                @click="convert(row)"
-              >
-                {{ convertingId === row.organization_member_id ? 'Convirtiendo…' : 'Convertir a socio' }}
-              </SoftButton>
+              <div class="flex flex-wrap items-center justify-end gap-2">
+                <SoftButton v-if="fichaId(row)" variant="outline" @click="openFicha(row)">
+                  Ver ficha
+                </SoftButton>
+                <SoftButton
+                  v-if="row.can_convert"
+                  variant="outline"
+                  :disabled="convertingId === row.organization_member_id"
+                  @click="convert(row)"
+                >
+                  {{ convertingId === row.organization_member_id ? 'Convirtiendo…' : 'Convertir a socio' }}
+                </SoftButton>
+              </div>
             </td>
           </tr>
         </tbody>

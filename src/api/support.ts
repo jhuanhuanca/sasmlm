@@ -8,6 +8,7 @@ export async function sendMarketingContact(body: {
   email: string
   subject?: string
   message: string
+  source?: 'landing' | 'meta-ads'
 }): Promise<SupportTicket> {
   const payload = await api<SupportTicket | LaravelData<SupportTicket>>('/support/contact', {
     method: 'POST',

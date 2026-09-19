@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { RouterView, useRoute } from 'vue-router'
+import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import DinoTourHost from '@/components/tour/DinoTourHost.vue'
@@ -11,7 +11,8 @@ import { companyThemeVars } from '@/utils/brand'
 useThemeStore()
 
 const route = useRoute()
-const { user } = storeToRefs(useAuthStore())
+const auth = useAuthStore()
+const { user, isLeader, hasPaidAccess } = storeToRefs(auth)
 const companyVars = computed(() => {
   const path = String(route.path)
   if (path.startsWith('/app/landing')) {
@@ -31,6 +32,7 @@ const companyVars = computed(() => {
 })
 
 const showAppFooter = computed(() => !String(route.path).startsWith('/app/landing'))
+const billingLocked = computed(() => isLeader.value && hasPaidAccess.value === false)
 </script>
 
 <template>
@@ -41,6 +43,18 @@ const showAppFooter = computed(() => !String(route.path).startsWith('/app/landin
     <main
       class="hide-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-6 sm:px-5 md:px-8 md:pt-8 lg:px-10"
     >
+      <div
+        v-if="billingLocked && route.name !== 'become-leader'"
+        class="mb-6 rounded-card border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"
+      >
+        <p class="font-semibold">Tu suscripción no está al día</p>
+        <p class="mt-1">
+          Paddle no pudo cobrar el plan. Hasta que pagues no puedes usar tienda, landing, equipo ni herramientas.
+        </p>
+        <RouterLink class="mt-2 inline-block font-medium underline" :to="{ name: 'become-leader' }">
+          Regularizar pago
+        </RouterLink>
+      </div>
       <RouterView />
       <footer
         v-if="showAppFooter"

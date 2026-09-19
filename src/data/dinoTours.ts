@@ -1,6 +1,7 @@
 export type DinoTourId =
   | 'leader-dashboard'
   | 'partner-dashboard'
+  | 'partner-sales'
   | 'team'
   | 'invitations'
   | 'store'
@@ -162,7 +163,14 @@ export const dinoTours: Record<DinoTourId, DinoTour> = {
         id: 'nav',
         target: 'app-nav',
         title: 'Lo que ves arriba',
-        body: 'Dashboard es esta pantalla. Landing y Tienda abren las páginas públicas de tu líder (en otra pestaña). Herramientas te sirven para asesorar. Volverse líder es el plan de suscripción. El play vuelve a abrir esta guía.',
+        body: 'Dashboard es esta pantalla. Si tu líder te autorizó, Ventas abre su inventario personal. Landing y Tienda abren las páginas públicas de tu líder (en otra pestaña). Herramientas te sirven para asesorar. Volverse líder es el plan de suscripción. El play vuelve a abrir esta guía.',
+      },
+      {
+        id: 'sales',
+        target: 'partner-sales',
+        title: 'Vender con permiso',
+        body: 'Esta tarjeta solo aparece si tu líder activó el permiso en tu ficha. Entras al inventario personal de él, registras la venta y se descuenta su stock. No ves costos ni editas productos.',
+        optional: true,
       },
       {
         id: 'tools',
@@ -192,7 +200,7 @@ export const dinoTours: Record<DinoTourId, DinoTour> = {
         id: 'welcome',
         target: 'team-welcome',
         title: 'Tu gente, en tres colores',
-        body: 'Socio (amarillo): ya tiene cuenta, todavía no paga plan. Líder (negro): ya se suscribió y tiene su propia red. Socio de empresa (azul): lo registras a mano en la red de tu marca, sin cuenta de esta plataforma. Las ventas de la tabla son de tu tienda, no PV.',
+        body: 'Socio (amarillo): ya tiene cuenta, todavía no paga plan. Líder (negro): ya se suscribió y tiene su propia red. Socio de empresa (azul): lo registras a mano en la red de tu marca, sin cuenta de esta plataforma. Las ventas de la tabla son de tu tienda, no PV. En la ficha de un socio puedes autorizarlo a vender de tu inventario personal.',
       },
       {
         id: 'company',
@@ -238,7 +246,7 @@ export const dinoTours: Record<DinoTourId, DinoTour> = {
         id: 'table',
         target: 'team-table',
         title: 'La lista',
-        body: 'Nombre, tipo, su equipo, ventas del mes, CRM o rango de marca, y fecha de alta. Entra a una persona de plataforma para ver pedidos y notas. Los reportes de abajo descargan Excel de referidos o de empresa.',
+        body: 'Nombre, tipo, su equipo, ventas del mes, CRM o rango de marca, y fecha de alta. En socios y líderes pulsa Ver ficha: ahí está el CRM y el permiso para vender de tu inventario. Los reportes de abajo descargan Excel de referidos o de empresa.',
       },
     ],
   },
@@ -517,7 +525,7 @@ export const dinoTours: Record<DinoTourId, DinoTour> = {
         id: 'welcome',
         target: 'plan-welcome',
         title: 'Volverse líder',
-        body: 'Hoy eres socio. Al elegir un plan y pagar (Paddle), naces tu red, tu landing y tu tienda. Tu líder actual gana la comisión de referido. Las ventas de productos siguen cobrándose por QR o transferencia: eso no pasa por Paddle.',
+        body: 'Hoy eres socio. Al elegir un plan pagas US$ 1 el primer ciclo (no es un mes gratis) y dejas tarjeta. Desde el mes 2 Paddle cobra el precio del paquete. Ahí naces tu red, landing y tienda. Tu líder gana comisión solo en el primer cobro de lista.',
       },
       {
         id: 'plans',
@@ -553,6 +561,30 @@ export const dinoTours: Record<DinoTourId, DinoTour> = {
       },
     ],
   },
+  'partner-sales': {
+    tone: 'mint',
+    launcher: '¿Te explico las ventas?',
+    steps: [
+      {
+        id: 'welcome',
+        target: 'partner-sales-welcome',
+        title: 'Inventario de tu líder',
+        body: 'Esto no es tu tienda. Es el inventario personal de tu líder, con su permiso. Registras la venta al cliente y se descuenta su stock. No ves lo que le costó ni puedes cambiar productos.',
+      },
+      {
+        id: 'kpis',
+        target: 'partner-sales-kpis',
+        title: 'Tus números',
+        body: 'Ventas del mes, totales y pedidos a tu nombre. Tu líder también las ve en Equipo, como ventas del socio.',
+      },
+      {
+        id: 'catalog',
+        target: 'partner-sales-catalog',
+        title: 'Catálogo y venta',
+        body: 'Elige un producto con stock y pulsa Vender, o Nueva venta arriba. Completa el cliente: retiro o envío. Al confirmar, baja el inventario de tu líder.',
+      },
+    ],
+  },
 }
 
 const routeTour: Record<string, DinoTourId> = {
@@ -567,6 +599,7 @@ const routeTour: Record<string, DinoTourId> = {
   profile: 'profile',
   'become-leader': 'become-leader',
   support: 'support',
+  'partner-sales': 'partner-sales',
 }
 
 export function tourIdForRoute(

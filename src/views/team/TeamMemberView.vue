@@ -28,6 +28,8 @@ const crm = reactive({
   notes: '',
   follow_up_at: '',
 })
+const canSellInventory = ref(false)
+const savingGrant = ref(false)
 
 const activity = reactive({
   type: 'note',
@@ -60,6 +62,7 @@ function applyMember(next: TeamMemberDetail): void {
   crm.crm_stage = String(next.crm_stage ?? 'new')
   crm.notes = next.notes ?? ''
   crm.follow_up_at = datetimeLocal(next.follow_up_at)
+  canSellInventory.value = Boolean(next.can_sell_inventory)
 }
 
 async function load(): Promise<void> {
@@ -97,6 +100,31 @@ async function saveCrm(): Promise<void> {
     toast.fromError(error, 'No se pudo guardar el seguimiento')
   } finally {
     saving.value = false
+  }
+}
+
+async function saveSellGrant(): Promise<void> {
+  savingGrant.value = true
+  message.value = ''
+
+  try {
+    applyMember(
+      await updateTeamMember(id.value, {
+        can_sell_inventory: canSellInventory.value,
+      }),
+    )
+    toast.success(
+      canSellInventory.value
+        ? 'El socio ya puede vender de tu inventario personal desde su panel.'
+        : 'Le quitaste el acceso a tu inventario personal.',
+      canSellInventory.value ? 'Permiso de venta activo' : 'Permiso de venta retirado',
+    )
+  } catch (error) {
+    canSellInventory.value = Boolean(member.value?.can_sell_inventory)
+    message.value = errorMessage(error, 'No se pudo actualizar el permiso de venta')
+    toast.fromError(error, 'No se pudo actualizar el permiso de venta')
+  } finally {
+    savingGrant.value = false
   }
 }
 
@@ -181,23 +209,41 @@ function activityLabel(type: string): string {
       </div>
 
       <div class="mt-6 grid gap-5 xl:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
-        <SoftCard>
-          <h2 class="font-medium">Seguimiento</h2>
-          <form class="mt-4 space-y-4" @submit.prevent="saveCrm">
-            <SoftField label="Etapa">
-              <select v-model="crm.crm_stage" :class="fieldControlClass">
-                <option v-for="stage in stages" :key="stage.id" :value="stage.id">{{ stage.label }}</option>
-              </select>
-            </SoftField>
-            <SoftField label="Próximo seguimiento">
-              <input v-model="crm.follow_up_at" :class="fieldControlClass" type="datetime-local" />
-            </SoftField>
-            <SoftField label="Notas">
-              <textarea v-model="crm.notes" :class="fieldControlClass" rows="5" />
-            </SoftField>
-            <SoftButton type="submit" :disabled="saving">{{ saving ? 'Guardando…' : 'Guardar' }}</SoftButton>
-          </form>
-        </SoftCard>
+        <div class="space-y-5">
+          <SoftCard>
+            <h2 class="font-medium">Seguimiento</h2>
+            <form class="mt-4 space-y-4" @submit.prevent="saveCrm">
+              <SoftField label="Etapa">
+                <select v-model="crm.crm_stage" :class="fieldControlClass">
+                  <option v-for="stage in stages" :key="stage.id" :value="stage.id">{{ stage.label }}</option>
+                </select>
+              </SoftField>
+              <SoftField label="Próximo seguimiento">
+                <input v-model="crm.follow_up_at" :class="fieldControlClass" type="datetime-local" />
+              </SoftField>
+              <SoftField label="Notas">
+                <textarea v-model="crm.notes" :class="fieldControlClass" rows="5" />
+              </SoftField>
+              <SoftButton type="submit" :disabled="saving">{{ saving ? 'Guardando…' : 'Guardar' }}</SoftButton>
+            </form>
+          </SoftCard>
+
+          <SoftCard v-if="member.referred_id">
+            <h2 class="font-medium">Vender de tu inventario</h2>
+            <p class="mt-2 text-sm text-muted">
+              Si lo activas, este socio ve tu inventario personal en su panel y puede registrar ventas. Se descuenta tu stock. No ve costos ni puede editar productos.
+            </p>
+            <label class="mt-4 flex items-start gap-3 text-sm">
+              <input v-model="canSellInventory" class="mt-1" type="checkbox" />
+              <span>Puede vender de mi inventario personal</span>
+            </label>
+            <div class="mt-4">
+              <SoftButton type="button" :disabled="savingGrant" @click="saveSellGrant">
+                {{ savingGrant ? 'Guardando…' : 'Guardar permiso' }}
+              </SoftButton>
+            </div>
+          </SoftCard>
+        </div>
 
         <SoftCard>
           <h2 class="font-medium">Registrar actividad</h2>

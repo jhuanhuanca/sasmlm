@@ -1,5 +1,17 @@
 export type RoleName = 'admin' | 'leader' | 'partner'
 
+export type PlanEntitlements = {
+  store: boolean
+  tools: boolean
+  landing: boolean
+  team: boolean
+  partner_sell: boolean
+  closing: boolean
+  max_partners: number | null
+  extra_companies: number
+  support?: string
+}
+
 export type CompanyPalette = {
   primary?: string
   secondary?: string
@@ -41,6 +53,7 @@ export interface AuthUser {
   roles: RoleName[]
   current_network_id: number | null
   two_factor_enabled: boolean
+  uses_google?: boolean
   country?: string | null
   catalog_company_id?: number | null
   catalog_company_name?: string | null
@@ -51,12 +64,28 @@ export interface AuthUser {
   companies?: CompanyMembership[]
   secondary_company_price?: number
   secondary_company_currency?: string
+  billing?: {
+    has_paid_access: boolean
+    status?: string | null
+    next_billed_at?: string | null
+    ends_at?: string | null
+    complimentary?: boolean
+    plan?: {
+      id: number
+      name: string
+      slug: string
+      price: number
+      intro_price: number
+    } | null
+    entitlements?: PlanEntitlements
+  }
   organization?: { id: number; name: string; slug: string } | null
   company?: CompanyBrand | null
   store?: StoreSummary | null
   landing_page?: LandingSummary | null
   network?: NetworkSummary | null
   sponsor?: SponsorSummary | null
+  can_sell_leader_inventory?: boolean
 }
 
 export interface SponsorSummary {

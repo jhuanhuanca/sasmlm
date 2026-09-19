@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import SoftButton from '@/components/ui/SoftButton.vue'
 import SoftField from '@/components/ui/SoftField.vue'
-import { fetchMyShippingQuote } from '@/api/store'
+import { fetchMyShippingQuote, fetchShippingQuote } from '@/api/store'
 import type { PlacePosOrderPayload, Product } from '@/types/store'
 import {
   SHIPPING_COUNTRIES,
@@ -21,6 +21,7 @@ const props = defineProps<{
   shipping: DropshippingSettings
   saving?: boolean
   errors?: Record<string, string[]>
+  storeSlug?: string
 }>()
 
 const emit = defineEmits<{
@@ -122,12 +123,15 @@ async function refreshQuote(): Promise<void> {
   }
   quoting.value = true
   try {
-    quote.value = await fetchMyShippingQuote({
+    const query = {
       country: form.shipping_country,
       department: form.shipping_department,
       area: form.shipping_area,
       subtotal: subtotal.value,
-    })
+    }
+    quote.value = props.storeSlug
+      ? await fetchShippingQuote(props.storeSlug, query)
+      : await fetchMyShippingQuote(query)
   } catch {
     quote.value = null
   } finally {

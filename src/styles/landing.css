@@ -1195,6 +1195,7 @@
 
 .lp-hotspot.is-block {
   display: block;
+  width: 100%;
 }
 
 .lp-hotspot.is-editable {

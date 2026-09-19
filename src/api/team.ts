@@ -11,6 +11,7 @@ export function updateTeamMember(
     crm_stage?: string
     notes?: string | null
     follow_up_at?: string | null
+    can_sell_inventory?: boolean
   },
 ): Promise<TeamMemberDetail> {
   return api<TeamMemberDetail>(`/dashboard/team/${id}`, { method: 'PUT', body })

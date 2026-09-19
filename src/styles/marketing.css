@@ -454,10 +454,20 @@ html:has(.mk-root) {
 
 .mk-plan {
   position: relative;
+  display: flex;
+  flex-direction: column;
   border-radius: 24px;
   background: #fff;
   padding: 1.8rem 1.5rem;
   box-shadow: 0 18px 40px -28px rgba(26, 9, 63, 0.35);
+}
+
+.mk-plan .mk-checks {
+  flex: 1;
+}
+
+.mk-plan .mk-btn {
+  margin-top: auto;
 }
 
 .mk-plan.is-featured {
@@ -484,6 +494,35 @@ html:has(.mk-root) {
   font-size: 1.7rem;
 }
 
+.mk-plan-intro {
+  margin: 0.55rem 0 0;
+  color: var(--mk-coral);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.mk-plan-price {
+  margin: 0.15rem 0 0;
+  color: var(--mk-navy);
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.mk-plan-price span {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: #6f6681;
+}
+
+.mk-plan-annual {
+  margin: 0.25rem 0 0.7rem;
+  color: #6f6681;
+  font-size: 0.82rem;
+}
+
 .mk-plan .mk-plan-kicker {
   margin: 0.2rem 0 0.8rem;
   color: var(--mk-coral);
@@ -491,6 +530,24 @@ html:has(.mk-root) {
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.mk-checks li.is-off {
+  color: #8a8298;
+}
+
+.mk-checks li.is-off::before {
+  content: '–';
+  color: #c4becf;
+}
+
+.mk-plan-footnote {
+  margin: 1.4rem auto 0;
+  max-width: 46rem;
+  text-align: center;
+  color: #6f6681;
+  font-size: 0.88rem;
+  line-height: 1.5;
 }
 
 .mk-cta-band {
@@ -618,4 +675,58 @@ html:has(.mk-root) {
   .mk-split {
     grid-template-columns: 1fr 1fr;
   }
+}
+
+.mk-capture {
+  min-height: 100svh;
+  background: var(--mk-cream, #fffdf9);
+  color: var(--mk-muted, #6f6681);
+  font-family: 'Red Hat Display', var(--font-sans), sans-serif;
+  padding: 1.4rem 1rem 2.5rem;
+}
+
+.mk-capture-brand {
+  width: min(420px, 100%);
+  margin: 0 auto 1.5rem;
+}
+
+.mk-capture-card {
+  width: min(420px, 100%);
+  margin: 0 auto;
+  border-radius: 24px;
+  background: #fff;
+  padding: 1.6rem 1.35rem 1.4rem;
+  box-shadow: 0 24px 70px -28px rgba(26, 9, 63, 0.4);
+}
+
+.mk-capture-card .mk-h2 {
+  font-size: 1.85rem;
+  line-height: 1.15;
+}
+
+.mk-capture-form {
+  margin-top: 1.3rem;
+}
+
+.mk-capture-pain {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--mk-navy, #1a093f);
+}
+
+.mk-capture-ok {
+  margin: 1.2rem 0 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--mk-navy, #1a093f);
+}
+
+.mk-capture-fine {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #6f6681;
+  text-align: center;
 }

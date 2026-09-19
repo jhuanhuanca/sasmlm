@@ -18,10 +18,17 @@ export async function fetchPlans(): Promise<Plan[]> {
 
 export async function subscribeAsLeader(
   planId: number,
-): Promise<{ user?: AuthUser; promoted?: boolean; offline?: boolean; checkout_url?: string }> {
+): Promise<{
+  user?: AuthUser
+  promoted?: boolean
+  upgraded?: boolean
+  offline?: boolean
+  checkout_url?: string
+}> {
   const payload = await api<{
     user?: AuthUser | LaravelData<AuthUser>
     promoted?: boolean
+    upgraded?: boolean
     offline?: boolean
     checkout_url?: string
   }>('/subscriptions', {
@@ -33,4 +40,33 @@ export async function subscribeAsLeader(
     ...payload,
     user: payload.user ? unwrapData(payload.user) : undefined,
   }
+}
+
+export type BillingInvoice = {
+  id: string
+  billed_at: string | null
+  amount: number
+  currency: string
+  status: string
+  description: string
+}
+
+export async function fetchSubscription(): Promise<{
+  subscription?: Record<string, unknown> | null
+  billing?: AuthUser['billing']
+}> {
+  return api('/subscriptions/current')
+}
+
+export async function fetchInvoices(): Promise<BillingInvoice[]> {
+  const payload = await api<BillingInvoice[] | LaravelData<BillingInvoice[]>>('/subscriptions/invoices')
+  if (Array.isArray(payload)) {
+    return payload
+  }
+  const data = unwrapData(payload)
+  return Array.isArray(data) ? data : []
+}
+
+export async function cancelSubscription(): Promise<{ message?: string; ends_at?: string | null }> {
+  return api('/subscriptions/cancel', { method: 'POST' })
 }

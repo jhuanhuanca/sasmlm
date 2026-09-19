@@ -17,3 +17,12 @@ export const LANDING_PHOTO_FRAMES: Array<{
 export function isLandingPhotoFrame(value: unknown): value is LandingPhotoFrame {
   return LANDING_PHOTO_FRAMES.some((item) => item.id === value)
 }
+
+export const DEFAULT_LANDING_BENEFITS = [
+  'Fácil de usar',
+  'Tienda propia',
+  'Ingreso residual',
+  'Red que escala',
+  'Formación',
+  'Acompañamiento',
+]

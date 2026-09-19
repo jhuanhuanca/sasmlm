@@ -27,7 +27,7 @@ const router = useRouter()
 const auth = useAuthStore()
 const theme = useThemeStore()
 const tour = useDinoTourStore()
-const { user, isLeader, isAdmin, isPartnerOnly } = storeToRefs(auth)
+const { user, isLeader, isAdmin, isPartnerOnly, canSellLeaderInventory, entitlements, hasPaidAccess } = storeToRefs(auth)
 const menuOpen = ref(false)
 const accountOpen = ref(false)
 const accountMenu = ref<HTMLElement | null>(null)
@@ -43,6 +43,10 @@ const links = computed((): NavLink[] => {
     const items: NavLink[] = [{ to: '/app', name: 'dashboard', label: 'Dashboard', icon: 'home' }]
     const landingSlug = user.value?.sponsor?.landing_page?.slug
     const storeSlug = user.value?.sponsor?.store?.slug
+
+    if (canSellLeaderInventory.value) {
+      items.push({ to: '/app/ventas', name: 'partner-sales', label: 'Ventas', icon: 'bag' })
+    }
 
     if (landingSlug) {
       items.push({
@@ -79,21 +83,26 @@ const links = computed((): NavLink[] => {
 
   return [
     { to: '/app', name: 'dashboard', label: 'Dashboard', icon: 'home' },
-    ...(canLead.value
+    ...(canLead.value && entitlements.value?.team !== false
       ? ([
           { to: '/app/team', name: 'team', label: 'Equipo', icon: 'users' },
           { to: '/app/invitations', name: 'invitations', label: 'Invitaciones', icon: 'mail' },
         ] satisfies NavLink[])
       : []),
-    { to: '/app/store', name: 'store', label: 'Tienda', icon: 'bag' },
-    { to: '/app/landing', name: 'landing', label: 'Landing', icon: 'zap' },
-    { to: '/app/tools', name: 'tools', label: 'Herramientas', icon: 'heart' },
+    ...(entitlements.value?.store !== false ? ([{ to: '/app/store', name: 'store', label: 'Tienda', icon: 'bag' }] satisfies NavLink[]) : []),
+    ...(entitlements.value?.landing !== false ? ([{ to: '/app/landing', name: 'landing', label: 'Landing', icon: 'zap' }] satisfies NavLink[]) : []),
+    ...(entitlements.value?.tools !== false ? ([{ to: '/app/tools', name: 'tools', label: 'Herramientas', icon: 'heart' }] satisfies NavLink[]) : []),
     ...(canLead.value
       ? ([
           { to: '/app/commissions', name: 'commissions', label: 'Comisiones', icon: 'wallet' },
-          { to: '/app/cierre', name: 'monthly-closing', label: 'Cierre de mes', shortLabel: 'Cierre', icon: 'calendar' },
+          ...(entitlements.value?.closing !== false
+            ? ([{ to: '/app/cierre', name: 'monthly-closing', label: 'Cierre de mes', shortLabel: 'Cierre', icon: 'calendar' }] satisfies NavLink[])
+            : []),
           { to: '/app/soporte', name: 'support', label: 'Soporte', icon: 'clipboard' },
         ] satisfies NavLink[])
+      : []),
+    ...(canLead.value && hasPaidAccess.value === false
+      ? ([{ to: '/app/become-leader', name: 'become-leader', label: 'Pagar plan', icon: 'star' }] satisfies NavLink[])
       : []),
   ]
 })
