@@ -19,7 +19,7 @@ import SoftCard from '@/components/ui/SoftCard.vue'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
 import type { Plan } from '@/types/mlm'
-import { errorMessage, fieldErrors } from '@/utils/http'
+import { fieldErrors } from '@/utils/http'
 import { money, roleLabel } from '@/utils/format'
 
 const auth = useAuthStore()
