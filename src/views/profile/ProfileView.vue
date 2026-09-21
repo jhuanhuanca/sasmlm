@@ -146,6 +146,13 @@ async function choosePlan(plan: Plan): Promise<void> {
       window.location.assign(payload.checkout_url)
       return
     }
+    if (payload.offline) {
+      toast.error(
+        'El servidor sigue en cobro local (BILLING_OFFLINE). No se abre Paddle.',
+        'Paddle no se abrió',
+      )
+      return
+    }
     if (payload.user) {
       auth.setUser(payload.user)
       billing.value = payload.user.billing ?? billing.value

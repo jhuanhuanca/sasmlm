@@ -65,13 +65,20 @@ async function subscribe(): Promise<void> {
       window.location.assign(payload.checkout_url)
       return
     }
-    if (payload.user) {
-      auth.setUser(payload.user)
-    } else {
-      await auth.hydrate()
+    if (payload.offline) {
+      message.value =
+        'El servidor sigue en cobro local (BILLING_OFFLINE). No se abre Paddle. En el VPS pon BILLING_OFFLINE=false y php artisan config:clear.'
+      toast.error(message.value, 'Paddle no se abrió')
+      return
     }
-    await router.push({ name: 'dashboard' })
-    toast.success('Ya puedes operar tu red, landing y tienda.', 'Ahora eres líder')
+    if (payload.upgraded && payload.user) {
+      auth.setUser(payload.user)
+      await router.push({ name: 'dashboard' })
+      toast.success('Tu plan en Paddle quedó actualizado.', 'Plan actualizado')
+      return
+    }
+    message.value = 'Paddle no devolvió la URL de pago. Revisa la clave API, el pri_ y el dsc_ del plan.'
+    toast.error(message.value, 'No hay checkout')
   } catch (error) {
     message.value = errorMessage(error, 'No se pudo completar la suscripción')
     toast.fromError(error, 'No se pudo completar la suscripción')

@@ -19,11 +19,13 @@ export const useAuthStore = defineStore('auth', () => {
   const canSellLeaderInventory = computed(() => Boolean(user.value?.can_sell_leader_inventory))
   const entitlements = computed(() => user.value?.billing?.entitlements ?? null)
   const hasPaidAccess = computed(() => {
-    if (!isLeader.value || isAdmin.value) {
+    if (isAdmin.value) {
       return true
     }
-    const paid = user.value?.billing?.has_paid_access
-    return paid !== false
+    if (!isLeader.value) {
+      return true
+    }
+    return user.value?.billing?.has_paid_access === true
   })
   const primaryRole = computed(() => roles.value[0] ?? 'partner')
 
