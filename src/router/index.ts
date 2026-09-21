@@ -35,6 +35,11 @@ const routes: RouteRecordRaw[] = [
     meta: { guestOnly: true },
   },
   {
+    path: '/pago',
+    name: 'paddle-pay',
+    component: () => import('@/views/public/PaddlePayView.vue'),
+  },
+  {
     path: '/app',
     component: () => import('@/layouts/AppLayout.vue'),
     meta: { requiresAuth: true },
