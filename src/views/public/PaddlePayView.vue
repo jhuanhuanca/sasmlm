@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import BrandLogo from '@/components/ui/BrandLogo.vue'
-import { api } from '@/api/client'
+import { api, FetchError } from '@/api/client'
 import { openPaddleTransaction } from '@/composables/openPaddleCheckout'
 import { useAuthStore } from '@/stores/auth'
 
@@ -31,22 +31,40 @@ onMounted(async () => {
   try {
     let token = (import.meta.env.VITE_PADDLE_CLIENT_TOKEN || '').trim()
     let sandbox = String(import.meta.env.VITE_PADDLE_SANDBOX ?? 'false') === 'true'
+    let overlayStatus: number | null = null
 
     try {
       const overlay = await api<{ client_token?: string | null; sandbox?: boolean }>('/billing/overlay')
-      if (overlay.client_token) {
+      overlayStatus = 200
+      if (typeof overlay.client_token === 'string' && overlay.client_token.trim() !== '') {
         token = overlay.client_token.trim()
       }
       if (typeof overlay.sandbox === 'boolean') {
         sandbox = overlay.sandbox
       }
-    } catch {
-      // El token de Vite sirve si la API aún no publica /billing/overlay.
+    } catch (overlayError) {
+      if (overlayError instanceof FetchError) {
+        overlayStatus = overlayError.status ?? 0
+        error.value =
+          overlayStatus === 404
+            ? 'La API aún no tiene GET /api/v1/billing/overlay. Sube SubscriptionController y routes.php al servidor de la API (xeft), luego php artisan route:clear y config:clear.'
+            : `No pude leer el token de Paddle (HTTP ${overlayStatus} en /api/v1/billing/overlay).`
+        if (!token) {
+          return
+        }
+        error.value = ''
+      } else if (!token) {
+        error.value =
+          'No hay conexión con la API para /billing/overlay. Revisa VITE_API_URL y que xeft.rexmlm.tech esté arriba.'
+        return
+      }
     }
 
     if (!token) {
       error.value =
-        'Falta PADDLE_CLIENT_TOKEN (token de cliente live_ o test_, no la API key). Ponlo en el .env de la API y php artisan config:clear.'
+        overlayStatus === 200
+          ? 'La API respondió, pero client_token viene vacío. En el .env de la API (no el del frontend) debe existir PADDLE_CLIENT_TOKEN=live_… y el archivo config/services.php tiene que leer esa variable. Luego: php artisan config:clear'
+          : 'Falta el token de cliente de Paddle (live_…, no pdl_live_…).'
       return
     }
 

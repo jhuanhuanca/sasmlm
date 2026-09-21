@@ -41,7 +41,7 @@ export const api = ofetch.create({
       return
     }
 
-    if (response.url.includes('/auth/login') || response.url.includes('/auth/register')) {
+    if (response.url.includes('/auth/login') || response.url.includes('/auth/register') || response.url.includes('/billing/overlay')) {
       return
     }
 
