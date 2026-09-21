@@ -29,13 +29,13 @@ function entitlementLines(plan: Plan): string[] {
     return []
   }
   const lines: string[] = []
-  lines.push(e.landing ? 'Landing propia' : 'Sin landing')
-  lines.push(e.store ? 'Tienda, inventario y POS' : 'Sin tienda propia (vitrina del upline)')
-  lines.push(e.tools ? 'IMC, flyers y bienestar' : 'Sin herramientas de catálogo')
-  lines.push(e.partner_sell ? 'Los socios pueden vender tu inventario' : 'Los socios no venden tu inventario')
+  lines.push(e.landing ? 'Página propia' : 'Sin página pública')
+  lines.push(e.store ? 'Tienda, inventario y POS' : 'Sin tienda propia')
+  lines.push(e.tools ? 'IMC, flyers y bienestar' : 'Sin herramientas de ficha')
+  lines.push(e.partner_sell ? 'Los colaboradores pueden vender tu inventario' : 'Los colaboradores no venden tu inventario')
   const max = e.max_partners
-  lines.push(max ? `Hasta ${max} socios en red` : 'Sin tope práctico de socios')
-  lines.push(Number(e.extra_companies) > 0 ? '1 marca extra incluida' : 'Marca extra: US$ 15/mes')
+  lines.push(max ? `Hasta ${max} colaboradores` : 'Sin tope práctico de colaboradores')
+  lines.push(Number(e.extra_companies) > 0 ? '1 catálogo extra incluido' : 'Catálogo extra: US$ 15/mes')
   return lines
 }
 
@@ -87,13 +87,13 @@ async function subscribe(): Promise<void> {
     <ModuleBanner
       icon="star"
       eyebrow="Suscripción"
-      title="Elige tu paquete"
-      body="El primer mes por US$ 1, con tarjeta. Desde el segundo, Paddle cobra el precio de lista en automático. El socio sigue en US$ 0. WhatsApp y chatbot van aparte, más adelante."
+      title="Elige tu plan de software"
+      body="Suscripción SaaS. El primer ciclo por US$ 1 con tarjeta. Después Paddle cobra el precio de lista. El colaborador invitado no paga el plan. Los cobros de plataforma los formaliza Paddle como comerciante registrado."
       :actions="[
-        'Básico: red y landing. Sin tienda ni herramientas.',
-        'Intermedio: tienda, inventario y que tus socios vendan.',
-        'Premium: una marca extra incluida y soporte prioritario.',
-        'Tarjeta obligatoria el día 1. Avisamos 2 días antes del cobro.',
+        'Básico: equipo y página. Sin tienda.',
+        'Intermedio: tienda, inventario y que tus colaboradores vendan tu stock.',
+        'Premium: un catálogo extra incluido y soporte prioritario.',
+        'Tarjeta el día 1. Aviso 2 días antes de la renovación. Reembolso de 14 días en el primer cobro.',
       ]"
     />
     </div>

@@ -63,13 +63,6 @@ const tools: Array<{
     icon: 'alarm',
     tone: 'orange',
   },
-  {
-    to: '/app/tools/whatsapp-finder',
-    title: 'Buscador de WhatsApp',
-    hint: 'Instala y usa la extensión para enlaces de grupos y contactos.',
-    icon: 'whatsapp',
-    tone: 'royal',
-  },
 ]
 </script>
 

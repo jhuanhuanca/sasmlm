@@ -35,7 +35,7 @@ withDefaults(
       v-if="tagline"
       class="font-display text-[15px] font-bold italic leading-[1.15] tracking-tight text-[#FFD452] sm:max-w-[13.5rem] sm:text-base"
     >
-      resultados explosivos en tu multinivel
+      software de operación comercial
     </span>
   </span>
 </template>

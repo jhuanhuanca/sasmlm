@@ -13,7 +13,7 @@ withDefaults(
     withTagline?: boolean
   }>(),
   {
-    kicker: 'Acceso a líderes',
+    kicker: 'Acceso al panel',
     wide: false,
     withTagline: false,
   },
@@ -22,9 +22,9 @@ withDefaults(
 const theme = useThemeStore()
 
 const highlights = [
-  { icon: 'users' as const, title: 'Red', text: 'Estructura, invitaciones y seguimiento de tu equipo.' },
-  { icon: 'bag' as const, title: 'Tienda', text: 'Catálogo y pedidos alineados a tu empresa.' },
-  { icon: 'wallet' as const, title: 'Comisiones', text: 'Volumen y pagos en un mismo panel.' },
+  { icon: 'users' as const, title: 'Equipo', text: 'Invitaciones y seguimiento de colaboradores que aceptan unirse.' },
+  { icon: 'bag' as const, title: 'Tienda', text: 'Catálogo y pedidos de tu operación.' },
+  { icon: 'wallet' as const, title: 'Pagos', text: 'Planes de software cobrados por Paddle.' },
 ]
 </script>
 
@@ -43,10 +43,10 @@ const highlights = [
           <BrandLogo surface="dark" :tagline="withTagline" height-class="h-10 xl:h-11" />
         </RouterLink>
         <p class="mt-16 max-w-md font-display text-4xl font-semibold leading-tight tracking-tight text-white xl:text-5xl">
-          Opera tu red con la misma claridad que un tablero ejecutivo.
+          Opera catálogo, tienda y equipo con la claridad de un tablero ejecutivo.
         </p>
         <p class="mt-4 max-w-sm text-sm leading-6 text-white">
-          Un acceso para equipo, catálogo y compensaciones. Sin ruido visual, con la información que usas cada día.
+          Un acceso para equipo, catálogo y reportes. Sin ruido visual, con la información que usas cada día.
         </p>
       </div>
       <ul class="relative mt-8 space-y-4">

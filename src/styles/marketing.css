@@ -730,3 +730,75 @@ html:has(.mk-root) {
   color: #6f6681;
   text-align: center;
 }
+
+.mk-footer-legal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.mk-legal {
+  padding: 2.5rem 0 4rem;
+  color: var(--mk-navy);
+}
+
+.mk-legal-meta {
+  margin: 0.4rem 0 1.2rem;
+  font-size: 0.85rem;
+  color: var(--mk-muted);
+}
+
+.mk-legal-toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin: 1.4rem 0 2rem;
+}
+
+.mk-legal-toc a {
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--mk-navy) 18%, transparent);
+  padding: 0.35rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--mk-navy);
+  text-decoration: none;
+}
+
+.mk-legal-toc a.is-active {
+  background: var(--mk-navy);
+  color: #fff;
+}
+
+.mk-legal-block {
+  margin-top: 1.6rem;
+}
+
+.mk-legal-block h2 {
+  font-family: var(--font-display), 'Red Hat Display', sans-serif;
+  font-size: 1.2rem;
+  color: var(--mk-navy);
+}
+
+.mk-legal-block p,
+.mk-legal-block li {
+  color: var(--mk-muted);
+}
+
+.mk-legal-block ul {
+  margin: 0.6rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.mk-consent {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--mk-navy);
+}
+
+.mk-consent input {
+  margin-top: 0.25rem;
+}

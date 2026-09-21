@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Allow: /legal/
+Disallow: /app/
+Disallow: /captacion
+
+Sitemap: https://rexmlm.tech/sitemap.xml

@@ -8,9 +8,13 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/public/MarketingHomeView.vue'),
   },
   {
+    path: '/legal/:slug?',
+    name: 'legal',
+    component: () => import('@/views/public/LegalPageView.vue'),
+  },
+  {
     path: '/captacion',
-    name: 'capture',
-    component: () => import('@/views/public/CaptureLandingView.vue'),
+    redirect: '/',
   },
   {
     path: '/login',
@@ -105,8 +109,7 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'tools/whatsapp-finder',
-        name: 'tools-whatsapp-finder',
-        component: () => import('@/views/tools/WhatsAppFinderView.vue'),
+        redirect: { name: 'tools' },
       },
       {
         path: 'tools/:kind(flyers|pdfs|videos|audios)',

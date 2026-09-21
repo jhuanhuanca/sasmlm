@@ -542,7 +542,7 @@ async function saveGoals(): Promise<void> {
         <p class="text-xs tracking-[0.16em] text-muted uppercase">05 · Equipo y reinicio</p>
         <h2 class="mt-1 text-xl font-semibold">Quién necesita apoyo para arrancar el próximo ciclo</h2>
         <p class="mt-2 max-w-3xl text-sm text-muted">
-          El multinivel es cíclico: esto no es un final, es la pausa para resetear. Termina el mes como networker.
+          El ciclo de operación se cierra aquí: pausa, revisa cifras y arranca el siguiente periodo con el tablero en cero.
         </p>
 
         <SoftCard v-if="closing.team?.attention?.length" class="mt-5" :padded="false">

@@ -116,8 +116,15 @@ async function onGoogleCredential(idToken: string): Promise<void> {
     <p class="mt-8 border-t border-line pt-6 text-sm text-muted">
       ¿Aún no tienes cuenta?
       <RouterLink to="/register" class="font-semibold text-ink underline decoration-yellow decoration-2 underline-offset-4">
-        Crear cuenta de líder
+        Crear cuenta
       </RouterLink>
+    </p>
+    <p class="mt-3 text-center text-xs text-muted">
+      <RouterLink to="/legal/terminos">Términos</RouterLink>
+      ·
+      <RouterLink to="/legal/privacidad">Privacidad</RouterLink>
+      ·
+      <RouterLink to="/legal/reembolsos">Reembolsos</RouterLink>
     </p>
   </AuthLayout>
 </template>

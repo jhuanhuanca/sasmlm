@@ -37,6 +37,7 @@ const loading = ref(false)
 const optionsLoading = ref(false)
 const countries = ref<CountryOption[]>([])
 const companies = ref<CatalogCompanyOption[]>([])
+const acceptTerms = ref(false)
 const toast = useToast()
 const googleClientId = ref('')
 
@@ -82,6 +83,11 @@ watch(
 )
 
 async function submit(): Promise<void> {
+  if (!acceptTerms.value) {
+    message.value = 'Debes aceptar los términos y las políticas para crear la cuenta.'
+    return
+  }
+
   loading.value = true
   message.value = ''
   errors.value = {}
@@ -113,10 +119,18 @@ async function submit(): Promise<void> {
 }
 
 const googleReady = computed(
-  () => Boolean(googleClientId.value) && (Boolean(invitationToken.value) || Boolean(form.country && form.catalog_company_id && form.catalog_rank_id)),
+  () =>
+    Boolean(googleClientId.value) &&
+    acceptTerms.value &&
+    (Boolean(invitationToken.value) || Boolean(form.country && form.catalog_company_id && form.catalog_rank_id)),
 )
 
 async function onGoogleCredential(idToken: string): Promise<void> {
+  if (!acceptTerms.value) {
+    message.value = 'Debes aceptar los términos y las políticas para continuar con Google.'
+    return
+  }
+
   loading.value = true
   message.value = ''
   errors.value = {}
@@ -149,12 +163,12 @@ async function onGoogleCredential(idToken: string): Promise<void> {
   <AuthLayout
     wide
     with-tagline
-    :kicker="invitationToken ? 'Invitación' : 'Alta de líder'"
-    :title="invitationToken ? 'Únete a la red' : 'Crea tu cuenta'"
+    :kicker="invitationToken ? 'Invitación' : 'Alta de cuenta'"
+    :title="invitationToken ? 'Únete al equipo' : 'Crea tu cuenta'"
     :subtitle="
       invitationToken
-        ? `Te invita ${leaderName || 'un líder'}. Completa tus datos para entrar como socio.`
-        : 'Registra tu perfil, empresa y rango para abrir tu panel.'
+        ? `Te invita ${leaderName || 'un titular'}. Completa tus datos para entrar como colaborador.`
+        : 'Registra tu perfil y el catálogo con el que operas para abrir el panel.'
     "
   >
     <form class="space-y-5" @submit.prevent="submit">
@@ -260,14 +274,28 @@ async function onGoogleCredential(idToken: string): Promise<void> {
         </div>
       </section>
 
+      <label class="flex items-start gap-3 text-sm leading-5 text-muted">
+        <input v-model="acceptTerms" class="mt-1" type="checkbox" required />
+        <span>
+          Acepto los
+          <RouterLink class="font-semibold text-ink underline" to="/legal/terminos" target="_blank">términos de servicio</RouterLink>,
+          la
+          <RouterLink class="font-semibold text-ink underline" to="/legal/privacidad" target="_blank">privacidad</RouterLink>,
+          los
+          <RouterLink class="font-semibold text-ink underline" to="/legal/reembolsos" target="_blank">reembolsos</RouterLink>
+          y el
+          <RouterLink class="font-semibold text-ink underline" to="/legal/uso-aceptable" target="_blank">uso aceptable</RouterLink>.
+        </span>
+      </label>
+
       <SoftButton
         type="submit"
         variant="yellow"
         class="!h-12 !rounded-xl !text-[15px] !font-semibold"
-        :disabled="loading || (isLeaderSignup && (!form.catalog_company_id || !form.catalog_rank_id))"
+        :disabled="loading || !acceptTerms || (isLeaderSignup && (!form.catalog_company_id || !form.catalog_rank_id))"
         block
       >
-        {{ loading ? 'Creando cuenta…' : invitationToken ? 'Aceptar invitación' : 'Crear cuenta de líder' }}
+        {{ loading ? 'Creando cuenta…' : invitationToken ? 'Aceptar invitación' : 'Crear cuenta' }}
       </SoftButton>
     </form>
     <GoogleSignInButton
@@ -278,7 +306,7 @@ async function onGoogleCredential(idToken: string): Promise<void> {
       @credential="onGoogleCredential"
     />
     <p v-if="googleClientId && isLeaderSignup && !googleReady" class="mt-2 text-center text-xs text-muted">
-      Elige país, empresa y rango para registrarte con Google.
+      Elige país, empresa, rango y acepta las políticas para registrarte con Google.
     </p>
     <p class="mt-8 border-t border-line pt-6 text-sm text-muted">
       ¿Ya tienes cuenta?
