@@ -10,12 +10,16 @@ import ModuleBanner from '@/components/ui/ModuleBanner.vue'
 import SoftButton from '@/components/ui/SoftButton.vue'
 import SoftCard from '@/components/ui/SoftCard.vue'
 import { formatWellnessProtocol, type WellnessProtocol } from '@/data/wellnessProtocols'
+import { useCompanyToolGate } from '@/composables/useCompanyToolGate'
 import { useAuthStore } from '@/stores/auth'
+import { useCompanyToolsStore } from '@/stores/companyTools'
 import type { CompanyToolPackage } from '@/types/tools'
 import { fieldControlClass } from '@/utils/ui'
 
 const auth = useAuthStore()
 const { user } = storeToRefs(auth)
+const companyTools = useCompanyToolsStore()
+useCompanyToolGate('wellness')
 
 const selectedId = ref('')
 const protocol = ref<WellnessProtocol | null>(null)
@@ -67,6 +71,11 @@ async function copyInfo(): Promise<void> {
   copied.value = true
 }
 
+async function onCompanyChanged(): Promise<void> {
+  await companyTools.load(true)
+  await loadNeeds()
+}
+
 async function loadNeeds(): Promise<void> {
   loading.value = true
   try {
@@ -106,7 +115,7 @@ onMounted(async () => {
       ]"
     />
 
-    <CompanyScopeBar class="mt-4" label="Protocolos de" @changed="loadNeeds" />
+    <CompanyScopeBar class="mt-4" label="Protocolos de" @changed="onCompanyChanged" />
 
     <div v-if="!protocol" class="mt-4">
       <SoftCard :padded="false" class="overflow-hidden">
@@ -159,7 +168,7 @@ onMounted(async () => {
           </SoftButton>
         </form>
 
-        <div v-if="isHgw" class="px-5 pb-6 sm:px-8">
+        <div v-if="isHgw && companyTools.allows('wellness_consult')" class="px-5 pb-6 sm:px-8">
           <RouterLink to="/app/tools/wellness/consulta" class="consult-cta">
             Consulta personal
           </RouterLink>

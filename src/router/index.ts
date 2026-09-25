@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { mediaKindToToolKey, type CompanyToolKey } from '@/data/companyTools'
 import { useAuthStore } from '@/stores/auth'
+import { useCompanyToolsStore } from '@/stores/companyTools'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -101,25 +103,35 @@ const routes: RouteRecordRaw[] = [
         path: 'tools/wellness',
         name: 'tools-wellness',
         component: () => import('@/views/tools/WellnessView.vue'),
+        meta: { toolKey: 'wellness' },
       },
       {
         path: 'tools/imc',
         name: 'tools-imc',
         component: () => import('@/views/tools/ImcCalculatorView.vue'),
+        meta: { toolKey: 'imc' },
       },
       {
         path: 'tools/wellness/consulta',
         name: 'tools-wellness-consult',
         component: () => import('@/views/tools/WellnessConsultView.vue'),
+        meta: { toolKey: 'wellness_consult' },
       },
       {
         path: 'tools/whatsapp-finder',
         redirect: { name: 'tools' },
       },
       {
+        path: 'tools/anillos',
+        name: 'tools-ring-sizer',
+        component: () => import('@/views/tools/RingSizerView.vue'),
+        meta: { toolKey: 'ring_sizer' },
+      },
+      {
         path: 'tools/:kind(flyers|pdfs|videos|audios)',
         name: 'tools-media',
         component: () => import('@/views/tools/MediaLibraryView.vue'),
+        meta: { toolKey: 'media' },
       },
       {
         path: 'commissions',
@@ -231,6 +243,19 @@ router.beforeEach(async (to) => {
     const flags = auth.entitlements
     if (flags && flags.tools === false) {
       return { name: auth.hasPaidAccess ? 'dashboard' : 'become-leader' }
+    }
+  }
+
+  const toolKeyMeta = to.meta.toolKey
+  if (typeof toolKeyMeta === 'string') {
+    const companyTools = useCompanyToolsStore()
+    await companyTools.load()
+    const key: CompanyToolKey =
+      toolKeyMeta === 'media'
+        ? mediaKindToToolKey(String(to.params.kind ?? 'flyers'))
+        : (toolKeyMeta as CompanyToolKey)
+    if (!companyTools.allows(key)) {
+      return { name: 'tools' }
     }
   }
 

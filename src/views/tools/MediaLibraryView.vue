@@ -8,6 +8,8 @@ import ModuleBanner from '@/components/ui/ModuleBanner.vue'
 import SoftButton from '@/components/ui/SoftButton.vue'
 import SoftCard from '@/components/ui/SoftCard.vue'
 import { fetchCompanyDocuments } from '@/api/tools'
+import { useCompanyToolGate } from '@/composables/useCompanyToolGate'
+import { mediaKindToToolKey } from '@/data/companyTools'
 import {
   kindFromRoute,
   mediaKindMeta,
@@ -24,6 +26,8 @@ const message = ref('')
 const remote = ref<MediaItem[]>([])
 
 const kind = computed(() => kindFromRoute(String(route.params.kind ?? 'flyers')))
+const toolKey = computed(() => mediaKindToToolKey(kind.value))
+useCompanyToolGate(toolKey)
 const meta = computed(() => mediaKindMeta[kind.value])
 const items = computed(() => remote.value)
 const bannerIcon = computed<IconName>(() => {

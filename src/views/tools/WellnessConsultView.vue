@@ -6,8 +6,12 @@ import CompanyScopeBar from '@/components/company/CompanyScopeBar.vue'
 import FwpQvitalConsult from '@/views/tools/FwpQvitalConsult.vue'
 import HgwQvitalConsult from '@/views/tools/HgwQvitalConsult.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useCompanyToolGate } from '@/composables/useCompanyToolGate'
+import { useCompanyToolsStore } from '@/stores/companyTools'
 
 const auth = useAuthStore()
+const companyTools = useCompanyToolsStore()
+useCompanyToolGate('wellness_consult')
 const isFwp = computed(() => {
   const activeId = auth.user?.active_catalog_company_id || auth.user?.catalog_company_id || 0
   const fromMembership = auth.user?.companies?.find((row) => row.catalog_company_id === activeId)?.catalog_company_name
@@ -23,7 +27,7 @@ const isFwp = computed(() => {
       Bienestar y salud
     </RouterLink>
 
-    <CompanyScopeBar class="mt-4" />
+    <CompanyScopeBar class="mt-4" @changed="companyTools.load(true)" />
     <FwpQvitalConsult v-if="isFwp" />
     <HgwQvitalConsult v-else />
   </div>

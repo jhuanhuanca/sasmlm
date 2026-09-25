@@ -13,7 +13,9 @@ import ModuleBanner from '@/components/ui/ModuleBanner.vue'
 import ProgressPill from '@/components/ui/ProgressPill.vue'
 import SoftCard from '@/components/ui/SoftCard.vue'
 import CompanyScopeBar from '@/components/company/CompanyScopeBar.vue'
+import { COMPANY_TOOL_CARDS } from '@/data/companyTools'
 import { useAuthStore } from '@/stores/auth'
+import { useCompanyToolsStore } from '@/stores/companyTools'
 import { useDinoTourStore } from '@/stores/dinoTour'
 import PartnerHomeView from '@/views/dashboard/PartnerHomeView.vue'
 import type { DashboardSummary, ReferralRow } from '@/types/mlm'
@@ -21,6 +23,7 @@ import { compactNumber, countryLabel, firstName, initials, money, roleLabel } fr
 
 const auth = useAuthStore()
 const tour = useDinoTourStore()
+const companyTools = useCompanyToolsStore()
 const { user, isLeader, isAdmin, isPartnerOnly, primaryRole } = storeToRefs(auth)
 
 const loading = ref(true)
@@ -29,6 +32,7 @@ const team = ref<ReferralRow[]>([])
 const openPanel = ref<'network' | 'store' | 'landing' | 'tools' | 'plan'>('store')
 
 const canLead = computed(() => isLeader.value || isAdmin.value)
+const dashTools = computed(() => COMPANY_TOOL_CARDS.filter((tool) => companyTools.allows(tool.key)))
 const storeUrl = computed(() => (user.value?.store?.slug ? `/s/${user.value.store.slug}` : ''))
 const landingUrl = computed(() => (user.value?.landing_page?.slug ? `/l/${user.value.landing_page.slug}` : ''))
 const companyLogo = computed(() => user.value?.company?.logo || '')
@@ -199,8 +203,12 @@ onMounted(async () => {
     loading.value = false
     return
   }
-  await loadPulse()
+  await Promise.all([loadPulse(), companyTools.load()])
 })
+
+async function onScopeChanged(): Promise<void> {
+  await Promise.all([loadPulse(), companyTools.load(true)])
+}
 
 async function loadPulse(): Promise<void> {
   loading.value = true
@@ -246,7 +254,7 @@ async function loadPulse(): Promise<void> {
     />
     </div>
 
-    <CompanyScopeBar v-if="canLead" class="mt-4" label="Cierre y equipo de" @changed="loadPulse" />
+    <CompanyScopeBar v-if="canLead" class="mt-4" label="Cierre y equipo de" @changed="onScopeChanged" />
 
     <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between" data-tour="dash-pulse">
       <div>
@@ -404,9 +412,12 @@ async function loadPulse(): Promise<void> {
               <span class="text-muted">{{ openPanel === 'tools' ? '–' : '+' }}</span>
             </button>
             <div v-if="openPanel === 'tools'" class="px-5 pb-5 space-y-3">
-              <div>
+              <p v-if="companyTools.loaded && !dashTools.length" class="text-sm text-muted">
+                Esta empresa no tiene herramientas activas.
+              </p>
+              <div v-if="companyTools.allows('wellness')">
                 <p class="font-medium">Bienestar y salud</p>
-                <p class="mt-1 text-sm text-muted">Protocolos HGW por dolencia.</p>
+                <p class="mt-1 text-sm text-muted">Protocolos por dolencia de tu empresa.</p>
                 <RouterLink
                   to="/app/tools/wellness"
                   class="mt-3 inline-flex items-center gap-2 rounded-full bg-yellow px-4 py-2 text-sm font-medium text-ink"
@@ -415,7 +426,7 @@ async function loadPulse(): Promise<void> {
                   <AppIcon name="heart" :size="14" />
                 </RouterLink>
               </div>
-              <div>
+              <div v-if="companyTools.allows('imc')">
                 <p class="font-medium">Calculadora IMC</p>
                 <p class="mt-1 text-sm text-muted">Peso corporal y paquetes para bajar o subir.</p>
                 <RouterLink
@@ -426,29 +437,44 @@ async function loadPulse(): Promise<void> {
                   <AppIcon name="star" :size="14" />
                 </RouterLink>
               </div>
-              <div>
+              <div v-if="companyTools.allows('ring_sizer')">
+                <p class="font-medium">Medidor de anillos</p>
+                <p class="mt-1 text-sm text-muted">Talla de mujer u hombre y prueba en AR.</p>
+                <RouterLink
+                  to="/app/tools/anillos"
+                  class="mt-3 inline-flex items-center gap-2 rounded-full bg-yellow px-4 py-2 text-sm font-medium text-ink"
+                >
+                  Abrir medidor
+                  <AppIcon name="star" :size="14" />
+                </RouterLink>
+              </div>
+              <div v-if="companyTools.allows('flyers') || companyTools.allows('pdfs') || companyTools.allows('videos') || companyTools.allows('audios')">
                 <p class="font-medium">Material</p>
                 <p class="mt-1 text-sm text-muted">Flyers, PDFs, videos y audios para ver o descargar.</p>
                 <div class="mt-3 flex flex-wrap gap-2">
                   <RouterLink
+                    v-if="companyTools.allows('flyers')"
                     to="/app/tools/flyers"
                     class="inline-flex items-center rounded-full bg-yellow px-4 py-2 text-sm font-medium text-ink"
                   >
                     Flyers
                   </RouterLink>
                   <RouterLink
+                    v-if="companyTools.allows('pdfs')"
                     to="/app/tools/pdfs"
                     class="inline-flex items-center rounded-full bg-yellow px-4 py-2 text-sm font-medium text-ink"
                   >
                     PDFs
                   </RouterLink>
                   <RouterLink
+                    v-if="companyTools.allows('videos')"
                     to="/app/tools/videos"
                     class="inline-flex items-center rounded-full bg-yellow px-4 py-2 text-sm font-medium text-ink"
                   >
                     Videos
                   </RouterLink>
                   <RouterLink
+                    v-if="companyTools.allows('audios')"
                     to="/app/tools/audios"
                     class="inline-flex items-center rounded-full bg-yellow px-4 py-2 text-sm font-medium text-ink"
                   >

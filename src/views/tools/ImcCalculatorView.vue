@@ -18,12 +18,16 @@ import {
   type ImcPackage,
 } from '@/data/imcPackages'
 import { useAuthStore } from '@/stores/auth'
+import { useCompanyToolGate } from '@/composables/useCompanyToolGate'
+import { useCompanyToolsStore } from '@/stores/companyTools'
 import type { CompanyToolPackage } from '@/types/tools'
 import { fieldControlClass } from '@/utils/ui'
 import { whatsappUrl } from '@/utils/whatsapp'
 
 const auth = useAuthStore()
 const { user } = storeToRefs(auth)
+const companyTools = useCompanyToolsStore()
+useCompanyToolGate('imc')
 
 const weight = ref<number | null>(null)
 const height = ref<number | null>(null)
@@ -115,6 +119,11 @@ function backToCalc(): void {
   pack.value = null
 }
 
+async function onCompanyChanged(): Promise<void> {
+  await companyTools.load(true)
+  await loadCatalog()
+}
+
 async function loadCatalog(): Promise<void> {
   loadingPacks.value = true
   const catalog = await Promise.allSettled([fetchImcPackages()])
@@ -164,7 +173,7 @@ onMounted(async () => {
       ]"
     />
 
-    <CompanyScopeBar class="mt-4" label="Paquetes IMC de" @changed="loadCatalog" />
+    <CompanyScopeBar class="mt-4" label="Paquetes IMC de" @changed="onCompanyChanged" />
 
     <SoftCard v-if="!pack" :padded="false" class="overflow-hidden">
       <span class="block h-1 bg-yellow" />
