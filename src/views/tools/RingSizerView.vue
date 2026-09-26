@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
-import { fetchToolCatalogProducts } from '@/api/tools'
+import { fetchToolTryOnProducts } from '@/api/tools'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import CompanyScopeBar from '@/components/company/CompanyScopeBar.vue'
 import ModuleBanner from '@/components/ui/ModuleBanner.vue'
 import SoftButton from '@/components/ui/SoftButton.vue'
 import SoftCard from '@/components/ui/SoftCard.vue'
+import { useAuthStore } from '@/stores/auth'
 import { useBodyFit } from '@/composables/useBodyFit'
 import { useCompanyToolGate } from '@/composables/useCompanyToolGate'
 import {
@@ -26,6 +27,8 @@ import {
 } from '@/data/ringSizes'
 
 useCompanyToolGate('ring_sizer')
+
+const auth = useAuthStore()
 
 type Workspace = 'sizer' | 'ar'
 type SizerMode = 'ring' | 'finger' | 'chart'
@@ -54,6 +57,8 @@ const autoFit = ref(true)
 const catalogProducts = ref<CatalogJewelryProduct[]>([])
 const selectedProductId = ref<string | number | null>(null)
 const productsError = ref('')
+const inventoryQuery = ref('')
+const filterByKind = ref(false)
 let mediaStream: MediaStream | null = null
 
 const mirrored = computed(() => facing.value === 'user' && !photo.value)
@@ -66,7 +71,25 @@ const fingerGap = computed(() => Math.max(16, diameter.value * pxPerMm.value))
 const chart = computed(() => chartForGender(gender.value))
 const cardWidthPx = computed(() => CREDIT_CARD_WIDTH_MM * fallbackPxPerMm * cardScale.value)
 const cardHeightPx = computed(() => CREDIT_CARD_HEIGHT_MM * fallbackPxPerMm * cardScale.value)
-const visibleProducts = computed(() => catalogProducts.value.filter((item) => item.kind === arPiece.value))
+const visibleProducts = computed(() => {
+  const companyId = auth.user?.active_catalog_company_id || auth.user?.catalog_company_id || 0
+  const query = inventoryQuery.value.trim().toLowerCase()
+
+  return catalogProducts.value.filter((item) => {
+    if (companyId && item.catalog_company_id && item.catalog_company_id !== companyId) {
+      return false
+    }
+    if (filterByKind.value && item.kind !== arPiece.value) {
+      return false
+    }
+    if (!query) {
+      return true
+    }
+
+    const hay = `${item.name} ${item.category ?? ''}`.toLowerCase()
+    return hay.includes(query)
+  })
+})
 const selectedProduct = computed(
   () => catalogProducts.value.find((item) => String(item.id) === String(selectedProductId.value)) ?? null,
 )
@@ -230,7 +253,7 @@ function pickProduct(product: CatalogJewelryProduct): void {
 async function loadCatalogProducts(): Promise<void> {
   productsError.value = ''
   try {
-    const payload = await fetchToolCatalogProducts()
+    const payload = await fetchToolTryOnProducts()
     catalogProducts.value = payload.data
       .filter((row) => Boolean(row.image))
       .map((row) => ({
@@ -238,6 +261,8 @@ async function loadCatalogProducts(): Promise<void> {
         name: row.name,
         image: row.image,
         category: row.category,
+        stock: row.stock ?? null,
+        catalog_company_id: row.catalog_company_id ?? null,
         kind: inferJewelryKind(row.name, row.category),
       }))
     if (
@@ -248,7 +273,7 @@ async function loadCatalogProducts(): Promise<void> {
     }
   } catch {
     catalogProducts.value = []
-    productsError.value = 'No se pudieron cargar los productos del catálogo.'
+    productsError.value = 'No se pudo cargar el inventario. Revisa tu tienda e inténtalo de nuevo.'
   }
 }
 
@@ -292,7 +317,7 @@ onBeforeUnmount(() => {
       icon="star"
       eyebrow="Herramientas"
       title="Medidor de anillos"
-      body="Mide la talla con un anillo que ya calce o con el dedo. En AR pruebas productos del catálogo sobre la mano o el cuerpo."
+      body="Mide la talla con un anillo que ya calce o con el dedo. En AR pruebas un producto de tu inventario sobre la mano o el cuerpo."
       :actions="[
         'Calibra con una tarjeta si quieres 1:1 en pantalla.',
         'Elige mujer u hombre para el rango de tallas.',
@@ -301,7 +326,7 @@ onBeforeUnmount(() => {
       ]"
     />
 
-    <CompanyScopeBar class="mt-4" label="Catálogo de" @changed="loadCatalogProducts" />
+    <CompanyScopeBar class="mt-4" label="Inventario de" @changed="loadCatalogProducts" />
 
     <div class="mt-5 flex justify-center">
       <div class="inline-flex rounded-full bg-shell p-1">
@@ -471,7 +496,7 @@ onBeforeUnmount(() => {
       <div class="px-5 py-6 sm:px-8">
         <h2 class="font-display text-center text-2xl tracking-tight">Probar producto en AR</h2>
         <p class="mx-auto mt-2 max-w-md text-center text-sm text-muted">
-          Usa la foto del catálogo sobre la cámara. El modelo corre en tu teléfono: no hace falta un servicio de IA
+          Elige un producto de tu inventario con foto. El modelo corre en tu teléfono: no hace falta un servicio de IA
           externo. El resultado es orientativo.
         </p>
 
@@ -487,25 +512,48 @@ onBeforeUnmount(() => {
             {{ piece.label }}
           </button>
         </div>
+        <p class="mt-2 text-center text-xs text-muted">Así se coloca la pieza (mano, oreja, cuello o muñeca).</p>
 
         <div v-if="productsError" class="mt-3 text-sm text-red-600">{{ productsError }}</div>
-        <p v-else-if="!visibleProducts.length" class="mt-3 text-sm text-muted">
-          Esta empresa no tiene productos con foto para {{ arPiece }}. Cárgalos en el catálogo (con imagen) y vuelve a
-          entrar.
-        </p>
-        <div v-else class="mt-4 grid max-h-48 grid-cols-3 gap-2 overflow-auto">
-          <button
-            v-for="product in visibleProducts"
-            :key="String(product.id)"
-            type="button"
-            class="product-card"
-            :class="{ 'is-on': String(selectedProductId) === String(product.id) }"
-            @click="pickProduct(product)"
-          >
-            <img :src="product.image" :alt="product.name" />
-            <span>{{ product.name }}</span>
-          </button>
-        </div>
+        <template v-else>
+          <input
+            v-model="inventoryQuery"
+            class="mt-4 w-full rounded-input border border-line bg-white px-3 py-2 text-sm"
+            type="search"
+            placeholder="Buscar en tu inventario…"
+          />
+          <label class="mt-2 flex items-center gap-2 text-xs text-muted">
+            <input v-model="filterByKind" type="checkbox" />
+            Solo productos de {{ arPiece }}
+          </label>
+          <p v-if="!catalogProducts.length" class="mt-3 text-sm text-muted">
+            No hay productos con foto en tu inventario.
+            <RouterLink class="font-semibold text-ink underline" to="/app/store">Agrega imágenes en Tienda</RouterLink>
+            y vuelve a entrar.
+          </p>
+          <p v-else-if="!visibleProducts.length" class="mt-3 text-sm text-muted">
+            Ningún producto coincide con esa búsqueda.
+          </p>
+          <div v-else class="mt-4 max-h-56 space-y-2 overflow-auto">
+            <button
+              v-for="product in visibleProducts"
+              :key="String(product.id)"
+              type="button"
+              class="inventory-row"
+              :class="{ 'is-on': String(selectedProductId) === String(product.id) }"
+              @click="pickProduct(product)"
+            >
+              <img :src="product.image" :alt="product.name" />
+              <span class="min-w-0 flex-1 text-left">
+                <span class="block truncate text-sm font-semibold">{{ product.name }}</span>
+                <span class="mt-0.5 block text-xs text-muted">
+                  {{ product.category || product.kind }}
+                  <template v-if="product.stock != null"> · Stock {{ product.stock }}</template>
+                </span>
+              </span>
+            </button>
+          </div>
+        </template>
 
         <div class="mt-5 overflow-hidden rounded-card-sm border border-line bg-shell" data-ar-stage>
           <div class="relative aspect-[3/4] bg-charcoal/10">
@@ -580,7 +628,7 @@ onBeforeUnmount(() => {
         <p class="mt-3 text-xs text-muted">
           Arrastrar la pieza desactiva el ajuste automático. Vuelve a marcarlo para seguir el dedo, la oreja o el cuello.
           Un try-on fotorealista (brillo del metal sobre la piel) sí pediría un servicio especializado; esto ancla el
-          producto del catálogo a la postura.
+          producto de tu inventario a la postura.
         </p>
       </div>
     </SoftCard>
@@ -704,6 +752,29 @@ onBeforeUnmount(() => {
   height: 96px;
   object-fit: contain;
   pointer-events: none;
+}
+.inventory-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid var(--rex-line);
+  border-radius: 0.7rem;
+  background: white;
+  padding: 0.45rem 0.6rem;
+  cursor: pointer;
+}
+.inventory-row.is-on {
+  border-color: #e2557a;
+  background: #fff1f5;
+}
+.inventory-row img {
+  height: 48px;
+  width: 48px;
+  flex-shrink: 0;
+  object-fit: contain;
+  border-radius: 0.4rem;
+  background: var(--rex-shell);
 }
 .product-card {
   border: 1px solid var(--rex-line);

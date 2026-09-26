@@ -5,6 +5,8 @@ export type CatalogJewelryProduct = {
   name: string
   image: string
   category?: string | null
+  stock?: number | null
+  catalog_company_id?: number | null
   kind: JewelryKind
 }
 

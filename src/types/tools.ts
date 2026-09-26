@@ -49,6 +49,8 @@ export type ToolCatalogProduct = {
   name: string
   image: string
   category?: string | null
+  stock?: number | null
+  catalog_company_id?: number | null
 }
 
 export type ToolCatalogProductsPayload = {
