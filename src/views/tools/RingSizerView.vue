@@ -1,11 +1,20 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
+import { fetchToolCatalogProducts } from '@/api/tools'
 import AppIcon from '@/components/ui/AppIcon.vue'
+import CompanyScopeBar from '@/components/company/CompanyScopeBar.vue'
 import ModuleBanner from '@/components/ui/ModuleBanner.vue'
 import SoftButton from '@/components/ui/SoftButton.vue'
 import SoftCard from '@/components/ui/SoftCard.vue'
+import { useBodyFit } from '@/composables/useBodyFit'
 import { useCompanyToolGate } from '@/composables/useCompanyToolGate'
+import {
+  inferJewelryKind,
+  JEWELRY_KINDS,
+  type CatalogJewelryProduct,
+  type JewelryKind,
+} from '@/data/jewelryTryOn'
 import {
   CREDIT_CARD_HEIGHT_MM,
   CREDIT_CARD_WIDTH_MM,
@@ -20,7 +29,6 @@ useCompanyToolGate('ring_sizer')
 
 type Workspace = 'sizer' | 'ar'
 type SizerMode = 'ring' | 'finger' | 'chart'
-type ArPiece = 'anillo' | 'aretes' | 'collar' | 'pulsera'
 
 const workspace = ref<Workspace>('sizer')
 const mode = ref<SizerMode>('ring')
@@ -32,8 +40,7 @@ const cardScale = ref(1)
 const fallbackPxPerMm = 96 / 25.4
 const calibratedPxPerMm = ref<number | null>(null)
 
-const arPiece = ref<ArPiece>('anillo')
-const arPieces: ArPiece[] = ['anillo', 'aretes', 'collar', 'pulsera']
+const arPiece = ref<JewelryKind>('anillo')
 const videoEl = ref<HTMLVideoElement | null>(null)
 const fileEl = ref<HTMLInputElement | null>(null)
 const cameraError = ref('')
@@ -42,7 +49,15 @@ const overlayX = ref(50)
 const overlayY = ref(42)
 const overlayScale = ref(1)
 const dragging = ref(false)
+const facing = ref<'user' | 'environment'>('user')
+const autoFit = ref(true)
+const catalogProducts = ref<CatalogJewelryProduct[]>([])
+const selectedProductId = ref<string | number | null>(null)
+const productsError = ref('')
 let mediaStream: MediaStream | null = null
+
+const mirrored = computed(() => facing.value === 'user' && !photo.value)
+const bodyFit = useBodyFit(videoEl, arPiece, mirrored, computed(() => autoFit.value && workspace.value === 'ar' && !photo.value))
 
 const range = computed(() => RING_RANGE[gender.value])
 const pxPerMm = computed(() => calibratedPxPerMm.value ?? fallbackPxPerMm)
@@ -51,6 +66,23 @@ const fingerGap = computed(() => Math.max(16, diameter.value * pxPerMm.value))
 const chart = computed(() => chartForGender(gender.value))
 const cardWidthPx = computed(() => CREDIT_CARD_WIDTH_MM * fallbackPxPerMm * cardScale.value)
 const cardHeightPx = computed(() => CREDIT_CARD_HEIGHT_MM * fallbackPxPerMm * cardScale.value)
+const visibleProducts = computed(() => catalogProducts.value.filter((item) => item.kind === arPiece.value))
+const selectedProduct = computed(
+  () => catalogProducts.value.find((item) => String(item.id) === String(selectedProductId.value)) ?? null,
+)
+const overlayStyle = computed(() => {
+  const tracked = autoFit.value && !photo.value ? bodyFit.pose.value : null
+  const x = tracked?.x ?? overlayX.value
+  const y = tracked?.y ?? overlayY.value
+  const scale = (tracked?.scale ?? 1) * overlayScale.value
+  const rotate = tracked?.rotate ?? 0
+
+  return {
+    left: `${x}%`,
+    top: `${y}%`,
+    transform: `translate(-50%, -50%) scale(${scale}) rotate(${rotate}deg)`,
+  }
+})
 
 watch(gender, (next) => {
   const nextRange = RING_RANGE[next]
@@ -87,12 +119,19 @@ async function startCamera(): Promise<void> {
 
   try {
     mediaStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+      video: {
+        facingMode: { ideal: facing.value },
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+      },
       audio: false,
     })
     if (videoEl.value) {
       videoEl.value.srcObject = mediaStream
       await videoEl.value.play()
+    }
+    if (autoFit.value) {
+      await bodyFit.start()
     }
   } catch {
     cameraError.value = 'No se pudo abrir la cámara. Permite el acceso o sube una foto.'
@@ -100,11 +139,19 @@ async function startCamera(): Promise<void> {
 }
 
 function stopCamera(): void {
+  bodyFit.stop()
   mediaStream?.getTracks().forEach((track) => track.stop())
   mediaStream = null
   if (videoEl.value) {
     videoEl.value.srcObject = null
   }
+}
+
+async function flipCamera(): Promise<void> {
+  facing.value = facing.value === 'user' ? 'environment' : 'user'
+  photo.value = ''
+  await nextTick()
+  await startCamera()
 }
 
 function captureFrame(): void {
@@ -119,6 +166,10 @@ function captureFrame(): void {
   const ctx = canvas.getContext('2d')
   if (!ctx) {
     return
+  }
+  if (facing.value === 'user') {
+    ctx.translate(canvas.width, 0)
+    ctx.scale(-1, 1)
   }
   ctx.drawImage(video, 0, 0)
   photo.value = canvas.toDataURL('image/jpeg', 0.9)
@@ -145,9 +196,11 @@ function clearPhoto(): void {
   overlayX.value = 50
   overlayY.value = 42
   overlayScale.value = 1
+  void nextTick().then(() => startCamera())
 }
 
 function onOverlayPointerDown(event: PointerEvent): void {
+  autoFit.value = false
   dragging.value = true
   ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
 }
@@ -169,18 +222,57 @@ function onOverlayPointerUp(): void {
   dragging.value = false
 }
 
-onMounted(() => {
-  if (workspace.value === 'ar') {
-    void startCamera()
+function pickProduct(product: CatalogJewelryProduct): void {
+  selectedProductId.value = product.id
+  arPiece.value = product.kind
+}
+
+async function loadCatalogProducts(): Promise<void> {
+  productsError.value = ''
+  try {
+    const payload = await fetchToolCatalogProducts()
+    catalogProducts.value = payload.data
+      .filter((row) => Boolean(row.image))
+      .map((row) => ({
+        id: row.id,
+        name: row.name,
+        image: row.image,
+        category: row.category,
+        kind: inferJewelryKind(row.name, row.category),
+      }))
+    if (
+      selectedProductId.value &&
+      !catalogProducts.value.some((row) => String(row.id) === String(selectedProductId.value))
+    ) {
+      selectedProductId.value = null
+    }
+  } catch {
+    catalogProducts.value = []
+    productsError.value = 'No se pudieron cargar los productos del catálogo.'
   }
+}
+
+onMounted(() => {
+  void loadCatalogProducts()
 })
 
-watch(workspace, (next) => {
+watch(workspace, async (next) => {
   if (next === 'ar' && !photo.value) {
-    void startCamera()
+    await nextTick()
+    await startCamera()
     return
   }
   stopCamera()
+})
+
+watch(autoFit, (on) => {
+  if (on && workspace.value === 'ar' && !photo.value) {
+    void bodyFit.start()
+    return
+  }
+  if (!on) {
+    bodyFit.stop()
+  }
 })
 
 onBeforeUnmount(() => {
@@ -200,14 +292,16 @@ onBeforeUnmount(() => {
       icon="star"
       eyebrow="Herramientas"
       title="Medidor de anillos"
-      body="Mide la talla con un anillo que ya calce o con el dedo. Sirve para mujer y hombre. La prueba AR es orientativa: coloca la pieza sobre una foto."
+      body="Mide la talla con un anillo que ya calce o con el dedo. En AR pruebas productos del catálogo sobre la mano o el cuerpo."
       :actions="[
         'Calibra con una tarjeta si quieres 1:1 en pantalla.',
         'Elige mujer u hombre para el rango de tallas.',
-        'Por anillo, por dedo o consulta la tabla.',
-        'En AR prueba anillo, aretes, collar o pulsera.',
+        'Cambia entre cámara frontal y trasera.',
+        'El ajuste a la mano corre en el dispositivo, sin un servicio de IA de pago.',
       ]"
     />
+
+    <CompanyScopeBar class="mt-4" label="Catálogo de" @changed="loadCatalogProducts" />
 
     <div class="mt-5 flex justify-center">
       <div class="inline-flex rounded-full bg-shell p-1">
@@ -375,30 +469,51 @@ onBeforeUnmount(() => {
 
     <SoftCard v-else :padded="false" class="mt-5 overflow-hidden">
       <div class="px-5 py-6 sm:px-8">
-        <h2 class="font-display text-center text-2xl tracking-tight">Probar accesorio en AR</h2>
+        <h2 class="font-display text-center text-2xl tracking-tight">Probar producto en AR</h2>
         <p class="mx-auto mt-2 max-w-md text-center text-sm text-muted">
-          Simula cómo lucirá la joya. Elige el tipo de pieza y captura una foto.
+          Usa la foto del catálogo sobre la cámara. El modelo corre en tu teléfono: no hace falta un servicio de IA
+          externo. El resultado es orientativo.
         </p>
 
         <div class="mt-5 grid grid-cols-2 gap-3">
           <button
-            v-for="piece in arPieces"
-            :key="piece"
+            v-for="piece in JEWELRY_KINDS"
+            :key="piece.key"
             type="button"
             class="piece"
-            :class="{ 'is-on': arPiece === piece }"
-            @click="arPiece = piece"
+            :class="{ 'is-on': arPiece === piece.key }"
+            @click="arPiece = piece.key"
           >
-            {{ piece.charAt(0).toUpperCase() + piece.slice(1) }}
+            {{ piece.label }}
+          </button>
+        </div>
+
+        <div v-if="productsError" class="mt-3 text-sm text-red-600">{{ productsError }}</div>
+        <p v-else-if="!visibleProducts.length" class="mt-3 text-sm text-muted">
+          Esta empresa no tiene productos con foto para {{ arPiece }}. Cárgalos en el catálogo (con imagen) y vuelve a
+          entrar.
+        </p>
+        <div v-else class="mt-4 grid max-h-48 grid-cols-3 gap-2 overflow-auto">
+          <button
+            v-for="product in visibleProducts"
+            :key="String(product.id)"
+            type="button"
+            class="product-card"
+            :class="{ 'is-on': String(selectedProductId) === String(product.id) }"
+            @click="pickProduct(product)"
+          >
+            <img :src="product.image" :alt="product.name" />
+            <span>{{ product.name }}</span>
           </button>
         </div>
 
         <div class="mt-5 overflow-hidden rounded-card-sm border border-line bg-shell" data-ar-stage>
           <div class="relative aspect-[3/4] bg-charcoal/10">
             <video
-              v-if="!photo"
+              v-show="!photo"
               ref="videoEl"
               class="h-full w-full object-cover"
+              :class="{ 'is-mirror': mirrored }"
               playsinline
               muted
               autoplay
@@ -406,17 +521,19 @@ onBeforeUnmount(() => {
             <img v-else :src="photo" alt="Foto para prueba AR" class="h-full w-full object-cover" />
             <div
               class="overlay"
-              :style="{
-                left: `${overlayX}%`,
-                top: `${overlayY}%`,
-                transform: `translate(-50%, -50%) scale(${overlayScale})`,
-              }"
+              :style="overlayStyle"
               @pointerdown="onOverlayPointerDown"
               @pointermove="onOverlayPointerMove"
               @pointerup="onOverlayPointerUp"
               @pointercancel="onOverlayPointerUp"
             >
-              <svg v-if="arPiece === 'anillo'" viewBox="0 0 80 80" class="h-24 w-24">
+              <img
+                v-if="selectedProduct"
+                :src="selectedProduct.image"
+                :alt="selectedProduct.name"
+                class="product-overlay"
+              />
+              <svg v-else-if="arPiece === 'anillo'" viewBox="0 0 80 80" class="h-24 w-24">
                 <ellipse cx="40" cy="40" rx="28" ry="18" fill="none" stroke="#d4a017" stroke-width="6" />
                 <ellipse cx="40" cy="40" rx="18" ry="10" fill="none" stroke="#f3e6b3" stroke-width="2" />
               </svg>
@@ -434,25 +551,36 @@ onBeforeUnmount(() => {
                 <ellipse cx="60" cy="30" rx="48" ry="16" fill="none" stroke="#d4a017" stroke-width="5" />
               </svg>
             </div>
+            <button v-if="!photo" type="button" class="cam-flip" @click="flipCamera">
+              {{ facing === 'user' ? 'Cámara trasera' : 'Cámara frontal' }}
+            </button>
           </div>
         </div>
 
         <p v-if="cameraError" class="mt-3 text-sm text-red-600">{{ cameraError }}</p>
+        <p v-else-if="bodyFit.hint" class="mt-3 text-xs text-muted">{{ bodyFit.hint }}</p>
 
         <div class="mt-4 flex flex-wrap gap-2">
           <SoftButton v-if="!photo" variant="yellow" type="button" @click="captureFrame">Capturar foto</SoftButton>
           <SoftButton v-if="!photo" variant="outline" type="button" @click="startCamera">Abrir cámara</SoftButton>
           <SoftButton variant="outline" type="button" @click="fileEl?.click()">Subir foto</SoftButton>
           <SoftButton v-if="photo" variant="ghost" type="button" @click="clearPhoto">Otra foto</SoftButton>
-          <input ref="fileEl" class="hidden" type="file" accept="image/*" capture="user" @change="onPhotoFile" />
+          <input ref="fileEl" class="hidden" type="file" accept="image/*" capture="environment" @change="onPhotoFile" />
         </div>
+
+        <label class="mt-4 flex items-center gap-2 text-sm">
+          <input v-model="autoFit" type="checkbox" />
+          Ajuste automático a la mano o al cuerpo
+        </label>
 
         <label class="mt-4 block text-sm">
           Tamaño de la pieza
           <input v-model.number="overlayScale" class="slider mt-2" type="range" min="0.4" max="2.4" step="0.05" />
         </label>
         <p class="mt-3 text-xs text-muted">
-          Arrastra la joya sobre la foto. La vista AR es orientativa. Para un ajuste perfecto usa el medidor de anillos.
+          Arrastrar la pieza desactiva el ajuste automático. Vuelve a marcarlo para seguir el dedo, la oreja o el cuello.
+          Un try-on fotorealista (brillo del metal sobre la piel) sí pediría un servicio especializado; esto ancla el
+          producto del catálogo a la postura.
         </p>
       </div>
     </SoftCard>
@@ -570,5 +698,52 @@ onBeforeUnmount(() => {
   cursor: grab;
   touch-action: none;
   filter: drop-shadow(0 4px 8px rgb(0 0 0 / 0.25));
+}
+.product-overlay {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  pointer-events: none;
+}
+.product-card {
+  border: 1px solid var(--rex-line);
+  border-radius: 0.7rem;
+  background: white;
+  padding: 0.35rem;
+  text-align: left;
+  cursor: pointer;
+}
+.product-card.is-on {
+  border-color: #e2557a;
+}
+.product-card img {
+  height: 56px;
+  width: 100%;
+  object-fit: contain;
+}
+.product-card span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 0.25rem;
+  font-size: 0.7rem;
+  line-height: 1.2;
+}
+.cam-flip {
+  position: absolute;
+  right: 0.7rem;
+  bottom: 0.7rem;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(37 37 37 / 0.82);
+  color: white;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+video.is-mirror {
+  transform: scaleX(-1);
 }
 </style>

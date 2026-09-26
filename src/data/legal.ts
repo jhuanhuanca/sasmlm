@@ -68,8 +68,8 @@ export const legalDocs: Record<LegalSlug, LegalDoc> = {
       {
         title: '5. Propiedad intelectual',
         paragraphs: [
-          'El software, la marca REXmlm y los contenidos propios nos pertenecen o están licenciados. Tú conservas los datos que subas (productos, textos, imágenes). Nos concedes una licencia limitada para alojarlos y mostrarlos mientras uses el servicio.',
-          'Los logotipos de terceros en el sitio son de sus titulares. REXmlm no es socio, filial ni representante de esas empresas; el catálogo es una ayuda operativa para quien ya trabaja con ellas.',
+          'El software, la marca REXmlm y los contenidos propios nos pertenecen o están licenciados. Tú conservas los datos que subas (productos, textos, imágenes, nombre comercial y rango). Nos concedes una licencia limitada para alojarlos y mostrarlos mientras uses el servicio.',
+          'Eres responsable de no usar marcas, logotipos ni materiales de terceros sin autorización. REXmlm no es socio, filial ni representante de otras empresas.',
         ],
       },
       {

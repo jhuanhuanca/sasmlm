@@ -199,8 +199,8 @@ export interface RegisterBody {
   password_confirmation: string
   invitation_token?: string
   country?: string
-  catalog_company_id?: number
-  catalog_rank_id?: number
+  catalog_company_name?: string
+  catalog_rank_name?: string
 }
 
 export interface CatalogRankOption {
@@ -226,8 +226,8 @@ export interface GoogleAuthBody {
   id_token: string
   invitation_token?: string
   country?: string
-  catalog_company_id?: number
-  catalog_rank_id?: number
+  catalog_company_name?: string
+  catalog_rank_name?: string
 }
 
 export interface RegistrationOptions {

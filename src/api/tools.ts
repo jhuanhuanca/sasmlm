@@ -1,5 +1,10 @@
 import { api } from '@/api/client'
-import type { CompanyAvailableToolsPayload, CompanyMediaPayload, CompanyToolsPayload } from '@/types/tools'
+import type {
+  CompanyAvailableToolsPayload,
+  CompanyMediaPayload,
+  CompanyToolsPayload,
+  ToolCatalogProductsPayload,
+} from '@/types/tools'
 
 export function fetchImcPackages(): Promise<CompanyToolsPayload> {
   return api<CompanyToolsPayload>('/tools/imc-packages')
@@ -17,4 +22,8 @@ export function fetchCompanyDocuments(kind?: string): Promise<CompanyMediaPayloa
 
 export function fetchAvailableCompanyTools(): Promise<CompanyAvailableToolsPayload> {
   return api<CompanyAvailableToolsPayload>('/tools/available')
+}
+
+export function fetchToolCatalogProducts(): Promise<ToolCatalogProductsPayload> {
+  return api<ToolCatalogProductsPayload>('/tools/catalog-products')
 }

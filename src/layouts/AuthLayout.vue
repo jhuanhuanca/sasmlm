@@ -24,7 +24,7 @@ const theme = useThemeStore()
 const highlights = [
   { icon: 'users' as const, title: 'Equipo', text: 'Invitaciones y seguimiento de colaboradores que aceptan unirse.' },
   { icon: 'bag' as const, title: 'Tienda', text: 'Catálogo y pedidos de tu operación.' },
-  { icon: 'wallet' as const, title: 'Pagos', text: 'Planes de software cobrados por Paddle.' },
+  { icon: 'wallet' as const, title: 'Pagos', text: 'Planes de software con pago seguro.' },
 ]
 </script>
 

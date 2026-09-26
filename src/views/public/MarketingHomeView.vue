@@ -48,18 +48,9 @@ const extras = [
   },
 ]
 
-const partners = [
-  { name: 'HGW', src: '/marketing/partners/hgw.png', tone: 'light' },
-  { name: 'Immunotec', src: '/marketing/partners/immunotec.jpg', tone: 'light' },
-  { name: 'Omnilife', src: '/marketing/partners/omnilife.jpg', tone: 'light' },
-  { name: 'DXN', src: '/marketing/partners/dxn.jpg', tone: 'light' },
-  { name: 'Fase Global', src: '/marketing/partners/fase-global.png', tone: 'light' },
-  { name: 'FWP', src: '/marketing/partners/fwp.webp', tone: 'outline' },
-]
-
 const stats = [
   { title: '1 suscripción', text: 'acceso al software de catálogo, página y equipo.' },
-  { title: 'Pago con Paddle', text: 'comerciante registrado: factura, impuestos y checkout seguro.' },
+  { title: 'Pago seguro', text: 'checkout cifrado con tarjeta. Factura e impuestos en el cobro.' },
   { title: 'Cancelas cuando quieras', text: 'al final del periodo pagado; reembolso de 14 días en el primer cobro.' },
 ]
 
@@ -172,22 +163,27 @@ async function submitContact(): Promise<void> {
 
     <section class="mk-wrap mk-section mk-center">
       <p class="mk-lead" style="margin-inline: auto">Hecho para negocios que ya venden con procesos claros.</p>
-      <h2 class="mk-h2">Catálogos de ejemplo en la plataforma</h2>
+      <h2 class="mk-h2">Tú pones el nombre de tu negocio</h2>
       <p class="mk-lead mk-partners-copy">
-        REXmlm no es socio ni representante de estas marcas. El catálogo es una ayuda operativa para quien ya trabaja
-        con ellas. Los logotipos pertenecen a sus titulares.
+        REXmlm no representa marcas de terceros. En el alta indicas cómo se llama tu operación y el rango o rol que
+        usas internamente. El catálogo, las fotos y los textos los cargas tú.
       </p>
-      <div class="mk-partners">
-        <img
-          v-for="partner in partners"
-          :key="partner.name"
-          :src="partner.src"
-          :alt="partner.name"
-          :class="'is-' + partner.tone"
-        />
+      <div class="mk-own-brand">
+        <article>
+          <h3>Tu nombre</h3>
+          <p>El espacio del panel muestra el nombre que registres, no un listado de empresas ajenas.</p>
+        </article>
+        <article>
+          <h3>Tu catálogo</h3>
+          <p>Productos, imágenes y fichas que tú subas. Sin logotipos de otras compañías en esta web.</p>
+        </article>
+        <article>
+          <h3>Tu criterio</h3>
+          <p>Eres responsable de usar solo marcas y materiales para los que tengas permiso.</p>
+        </article>
       </div>
       <p class="mk-partners-note">
-        ¿Necesitas otro catálogo? <a href="#contacto">Escríbenos</a> y lo evaluamos.
+        ¿Dudas sobre cómo armar tu espacio? <a href="#contacto">Escríbenos</a>.
       </p>
     </section>
 
@@ -291,8 +287,8 @@ async function submitContact(): Promise<void> {
         <span class="mk-kicker">Suscripción SaaS</span>
         <h2 class="mk-h2">Planes de software</h2>
         <p class="mk-lead" style="margin-inline: auto">
-          Tres planes. El primer ciclo por US$ 1 con tarjeta. Después, Paddle cobra el precio de lista en automático.
-          El colaborador invitado no paga el plan de la plataforma. Impuestos en el checkout, según tu país.
+          Tres planes. El primer ciclo por US$ 1 con tarjeta. Después se cobra el precio de lista en automático, con
+          pago seguro. El colaborador invitado no paga el plan de la plataforma. Impuestos en el checkout, según tu país.
         </p>
       </div>
       <div class="mk-plans">
@@ -314,8 +310,7 @@ async function submitContact(): Promise<void> {
         </article>
       </div>
       <p class="mk-plan-footnote">
-        El vendedor de los planes es Paddle (Merchant of Record). Cancelación al final del periodo; reembolso de 14 días
-        en el primer cobro. Detalle en
+        Pago seguro con tarjeta. Cancelación al final del periodo; reembolso de 14 días en el primer cobro. Detalle en
         <RouterLink to="/legal/reembolsos">reembolsos</RouterLink>
         y
         <RouterLink to="/legal/terminos">términos</RouterLink>.

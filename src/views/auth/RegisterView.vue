@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { fetchInvitation } from '@/api/invitations'
 import { fetchRegistrationOptions } from '@/api/auth'
@@ -10,7 +10,7 @@ import SoftField from '@/components/ui/SoftField.vue'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
-import type { CatalogCompanyOption, CountryOption } from '@/types/auth'
+import type { CountryOption } from '@/types/auth'
 import { errorMessage, fieldErrors } from '@/utils/http'
 import { authFieldControlClass } from '@/utils/ui'
 
@@ -28,23 +28,17 @@ const form = reactive({
   password: '',
   password_confirmation: '',
   country: '',
-  catalog_company_id: 0,
-  catalog_rank_id: 0,
+  catalog_company_name: '',
+  catalog_rank_name: '',
 })
 const errors = ref<Record<string, string[]>>({})
 const message = ref('')
 const loading = ref(false)
 const optionsLoading = ref(false)
 const countries = ref<CountryOption[]>([])
-const companies = ref<CatalogCompanyOption[]>([])
 const acceptTerms = ref(false)
 const toast = useToast()
 const googleClientId = ref('')
-
-const selectedCompany = computed(
-  () => companies.value.find((company) => company.id === form.catalog_company_id) ?? null,
-)
-const ranks = computed(() => selectedCompany.value?.ranks ?? [])
 
 onMounted(async () => {
   if (invitationToken.value) {
@@ -61,26 +55,23 @@ onMounted(async () => {
   try {
     const options = await fetchRegistrationOptions()
     countries.value = options.countries ?? []
-    companies.value = options.companies ?? []
     googleClientId.value = options.google_client_id ?? ''
-    if (isLeaderSignup.value && !companies.value.length) {
-      message.value = 'Aún no hay empresas en el catálogo. Crea una en el panel admin y agrega rangos.'
-    }
   } catch {
     if (isLeaderSignup.value) {
-      message.value = 'No se pudieron cargar empresas y rangos. Revisa que el catálogo esté en marcha.'
+      message.value = 'No se pudieron cargar los países. Inténtalo de nuevo.'
     }
   } finally {
     optionsLoading.value = false
   }
 })
 
-watch(
-  () => form.catalog_company_id,
-  () => {
-    form.catalog_rank_id = 0
-  },
-)
+function affiliationPayload() {
+  return {
+    country: form.country,
+    catalog_company_name: form.catalog_company_name.trim(),
+    catalog_rank_name: form.catalog_rank_name.trim(),
+  }
+}
 
 async function submit(): Promise<void> {
   if (!acceptTerms.value) {
@@ -99,13 +90,7 @@ async function submit(): Promise<void> {
       password: form.password,
       password_confirmation: form.password_confirmation,
       invitation_token: invitationToken.value || undefined,
-      ...(isLeaderSignup.value
-        ? {
-            country: form.country,
-            catalog_company_id: form.catalog_company_id,
-            catalog_rank_id: form.catalog_rank_id,
-          }
-        : {}),
+      ...(isLeaderSignup.value ? affiliationPayload() : {}),
     })
     await router.replace('/app')
     toast.success('Te enviamos un correo de bienvenida.', 'Cuenta creada')
@@ -122,7 +107,8 @@ const googleReady = computed(
   () =>
     Boolean(googleClientId.value) &&
     acceptTerms.value &&
-    (Boolean(invitationToken.value) || Boolean(form.country && form.catalog_company_id && form.catalog_rank_id)),
+    (Boolean(invitationToken.value) ||
+      Boolean(form.country && form.catalog_company_name.trim() && form.catalog_rank_name.trim())),
 )
 
 async function onGoogleCredential(idToken: string): Promise<void> {
@@ -139,13 +125,7 @@ async function onGoogleCredential(idToken: string): Promise<void> {
     await auth.loginWithGoogle({
       id_token: idToken,
       invitation_token: invitationToken.value || undefined,
-      ...(isLeaderSignup.value
-        ? {
-            country: form.country,
-            catalog_company_id: form.catalog_company_id,
-            catalog_rank_id: form.catalog_rank_id,
-          }
-        : {}),
+      ...(isLeaderSignup.value ? affiliationPayload() : {}),
     })
     await router.replace('/app')
     toast.success('Te enviamos un correo de bienvenida.', 'Cuenta creada')
@@ -168,7 +148,7 @@ async function onGoogleCredential(idToken: string): Promise<void> {
     :subtitle="
       invitationToken
         ? `Te invita ${leaderName || 'un titular'}. Completa tus datos para entrar como colaborador.`
-        : 'Registra tu perfil y el catálogo con el que operas para abrir el panel.'
+        : 'Indica tu empresa y rango tal como los usas. No hace falta elegirlos de un catálogo.'
     "
   >
     <form class="space-y-5" @submit.prevent="submit">
@@ -217,40 +197,31 @@ async function onGoogleCredential(idToken: string): Promise<void> {
               </option>
             </select>
           </SoftField>
-          <SoftField label="Empresa" :error="errors.catalog_company_id?.[0]">
-            <select
-              v-model.number="form.catalog_company_id"
+          <SoftField
+            label="Empresa"
+            :error="errors.catalog_company_name?.[0]"
+            hint="El nombre con el que identificas tu operación."
+          >
+            <input
+              v-model="form.catalog_company_name"
               :class="authFieldControlClass"
+              autocomplete="organization"
+              placeholder="Nombre de tu empresa"
               required
-              :disabled="optionsLoading || !companies.length"
-            >
-              <option :value="0" disabled>Selecciona la empresa</option>
-              <option v-for="company in companies" :key="company.id" :value="company.id">
-                {{ company.name }}
-              </option>
-            </select>
+            />
           </SoftField>
           <SoftField
             class="sm:col-span-2"
             label="Rango"
-            :error="errors.catalog_rank_id?.[0]"
-            :hint="
-              selectedCompany && !ranks.length
-                ? 'Esta empresa aún no tiene rangos. Agrégalos en el plan de compensación.'
-                : 'Según el plan de compensación de esa empresa.'
-            "
+            :error="errors.catalog_rank_name?.[0]"
+            hint="El rango o nivel que usas en tu red."
           >
-            <select
-              v-model.number="form.catalog_rank_id"
+            <input
+              v-model="form.catalog_rank_name"
               :class="authFieldControlClass"
+              placeholder="Tu rango"
               required
-              :disabled="!selectedCompany || !ranks.length"
-            >
-              <option :value="0" disabled>Selecciona tu rango</option>
-              <option v-for="rank in ranks" :key="rank.id" :value="rank.id">
-                {{ rank.name }}<template v-if="rank.plan_name"> · {{ rank.plan_name }}</template>
-              </option>
-            </select>
+            />
           </SoftField>
         </div>
       </section>
@@ -292,7 +263,11 @@ async function onGoogleCredential(idToken: string): Promise<void> {
         type="submit"
         variant="yellow"
         class="!h-12 !rounded-xl !text-[15px] !font-semibold"
-        :disabled="loading || !acceptTerms || (isLeaderSignup && (!form.catalog_company_id || !form.catalog_rank_id))"
+        :disabled="
+          loading ||
+          !acceptTerms ||
+          (isLeaderSignup && (!form.country || !form.catalog_company_name.trim() || !form.catalog_rank_name.trim()))
+        "
         block
       >
         {{ loading ? 'Creando cuenta…' : invitationToken ? 'Aceptar invitación' : 'Crear cuenta' }}
@@ -306,7 +281,7 @@ async function onGoogleCredential(idToken: string): Promise<void> {
       @credential="onGoogleCredential"
     />
     <p v-if="googleClientId && isLeaderSignup && !googleReady" class="mt-2 text-center text-xs text-muted">
-      Elige país, empresa, rango y acepta las políticas para registrarte con Google.
+      Completa país, empresa, rango y acepta las políticas para registrarte con Google.
     </p>
     <p class="mt-8 border-t border-line pt-6 text-sm text-muted">
       ¿Ya tienes cuenta?

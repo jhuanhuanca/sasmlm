@@ -61,7 +61,7 @@ function scrollTop(): void {
         <div class="mk-footer-grid">
           <div>
             <small>Producto</small>
-            <p>SaaS de catálogo, tienda, página y equipo. Los planes de plataforma los cobra Paddle como comerciante registrado.</p>
+            <p>SaaS de catálogo, tienda, página y equipo. El cobro del plan es con pago seguro.</p>
           </div>
           <div>
             <small>Legal</small>
@@ -83,7 +83,7 @@ function scrollTop(): void {
           </div>
         </div>
         <div class="mk-footer-bottom">
-          <p>REXmlm · Software de suscripción. Pagos de planes procesados por Paddle.</p>
+          <p>REXmlm · Software de suscripción. Pago seguro.</p>
           <p>© {{ new Date().getFullYear() }} REXmlm</p>
         </div>
       </div>

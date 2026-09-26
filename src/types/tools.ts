@@ -43,3 +43,15 @@ export type CompanyAvailableToolsPayload = {
   company: { id?: number | null; name?: string | null; logo?: string | null } | null
   tools: string[]
 }
+
+export type ToolCatalogProduct = {
+  id: number | string | null
+  name: string
+  image: string
+  category?: string | null
+}
+
+export type ToolCatalogProductsPayload = {
+  company: { id?: number | null; name?: string | null; logo?: string | null } | null
+  data: ToolCatalogProduct[]
+}
