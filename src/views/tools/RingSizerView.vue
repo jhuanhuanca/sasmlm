@@ -518,7 +518,7 @@ onBeforeUnmount(() => {
               muted
               autoplay
             />
-            <img v-else :src="photo" alt="Foto para prueba AR" class="h-full w-full object-cover" />
+            <img v-if="photo" :src="photo" alt="Foto para prueba AR" class="h-full w-full object-cover" />
             <div
               class="overlay"
               :style="overlayStyle"
