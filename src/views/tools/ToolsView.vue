@@ -29,7 +29,7 @@ onMounted(() => {
         'Mide IMC y abre el paquete de peso.',
         'Descarga flyers, PDFs, videos o audios para compartir.',
         'Mide talla de anillo o prueba una joya en AR.',
-        'Instala el buscador de grupos de WhatsApp si prospectas ahí.',
+        'Con Premium: chatbot WhatsApp (ingresar, configurar o pedir ayuda).',
       ]"
     />
     </div>
@@ -41,7 +41,7 @@ onMounted(() => {
     </p>
 
     <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" data-tour="tools-grid">
-      <RouterLink v-for="tool in tools" :key="tool.to" :to="tool.to" class="group">
+      <RouterLink v-for="tool in tools" :key="tool.key" :to="tool.to!" class="group">
         <SoftCard class="h-full transition group-hover:-translate-y-0.5">
           <ClayTile :name="tool.icon" :tone="tool.tone" size="md" />
           <h2 class="mt-4 text-lg font-semibold">{{ tool.title }}</h2>

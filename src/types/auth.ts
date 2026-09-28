@@ -7,6 +7,7 @@ export type PlanEntitlements = {
   team: boolean
   partner_sell: boolean
   closing: boolean
+  whatsapp_chatbot?: boolean
   max_partners: number | null
   extra_companies: number
   support?: string

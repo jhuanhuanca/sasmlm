@@ -118,8 +118,10 @@ const routes: RouteRecordRaw[] = [
         meta: { toolKey: 'wellness_consult' },
       },
       {
-        path: 'tools/whatsapp-finder',
-        redirect: { name: 'tools' },
+        path: 'tools/whatsapp',
+        name: 'tools-whatsapp-chatbot',
+        component: () => import('@/views/tools/WhatsAppChatbotView.vue'),
+        meta: { toolKey: 'whatsapp_chatbot' },
       },
       {
         path: 'tools/anillos',

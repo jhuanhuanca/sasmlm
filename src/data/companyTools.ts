@@ -10,13 +10,20 @@ export const COMPANY_TOOL_KEYS = [
   'videos',
   'audios',
   'ring_sizer',
+  'whatsapp_chatbot',
 ] as const
 
 export type CompanyToolKey = (typeof COMPANY_TOOL_KEYS)[number]
 
+const chatbotOrigin = (import.meta.env.VITE_WHATSAPP_CHATBOT_URL || 'https://regissynkai.store').replace(/\/$/, '')
+
+export const WHATSAPP_CHATBOT_LOGIN_URL = `${chatbotOrigin}/login`
+export const WHATSAPP_CHATBOT_REGISTER_URL = `${chatbotOrigin}/registro`
+
 export type CompanyToolCard = {
   key: CompanyToolKey
-  to: string
+  to?: string
+  href?: string
   title: string
   hint: string
   icon: IconName
@@ -87,6 +94,14 @@ export const COMPANY_TOOL_CARDS: CompanyToolCard[] = [
     hint: 'Averigua la talla (mujer u hombre) y prueba anillo, aretes, collar o pulsera en AR.',
     icon: 'star',
     tone: 'coral',
+  },
+  {
+    key: 'whatsapp_chatbot',
+    to: '/app/tools/whatsapp',
+    title: 'Chatbot WhatsApp',
+    hint: 'Plan Premium. Ingresar, configurar o pedir ayuda a soporte.',
+    icon: 'whatsapp',
+    tone: 'mint',
   },
 ]
 

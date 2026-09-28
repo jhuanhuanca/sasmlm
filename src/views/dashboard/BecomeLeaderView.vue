@@ -32,6 +32,9 @@ function entitlementLines(plan: Plan): string[] {
   lines.push(e.landing ? 'Página propia' : 'Sin página pública')
   lines.push(e.store ? 'Tienda, inventario y POS' : 'Sin tienda propia')
   lines.push(e.tools ? 'IMC, flyers y bienestar' : 'Sin herramientas de ficha')
+  if (e.whatsapp_chatbot) {
+    lines.push('Chatbot WhatsApp (API, otra ventana)')
+  }
   lines.push(e.partner_sell ? 'Los colaboradores pueden vender tu inventario' : 'Los colaboradores no venden tu inventario')
   const max = e.max_partners
   lines.push(max ? `Hasta ${max} colaboradores` : 'Sin tope práctico de colaboradores')

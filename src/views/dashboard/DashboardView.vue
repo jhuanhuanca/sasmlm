@@ -448,6 +448,17 @@ async function loadPulse(): Promise<void> {
                   <AppIcon name="star" :size="14" />
                 </RouterLink>
               </div>
+              <div v-if="companyTools.allows('whatsapp_chatbot')">
+                <p class="font-medium">Chatbot WhatsApp</p>
+                <p class="mt-1 text-sm text-muted">Ingresar, configurar o pedir ayuda para Vendedor Live.</p>
+                <RouterLink
+                  to="/app/tools/whatsapp"
+                  class="mt-3 inline-flex items-center gap-2 rounded-full bg-yellow px-4 py-2 text-sm font-medium text-ink"
+                >
+                  Abrir chatbot
+                  <AppIcon name="whatsapp" :size="14" />
+                </RouterLink>
+              </div>
               <div v-if="companyTools.allows('flyers') || companyTools.allows('pdfs') || companyTools.allows('videos') || companyTools.allows('audios')">
                 <p class="font-medium">Material</p>
                 <p class="mt-1 text-sm text-muted">Flyers, PDFs, videos y audios para ver o descargar.</p>
