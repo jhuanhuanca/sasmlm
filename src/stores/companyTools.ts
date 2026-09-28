@@ -34,8 +34,21 @@ export const useCompanyToolsStore = defineStore('companyTools', () => {
   }
 
   function allows(key: CompanyToolKey): boolean {
+    if (key === 'whatsapp_chatbot') {
+      return keys.value.includes(key) || isPremiumPlan()
+    }
+
     return keys.value.includes(key)
   }
 
-  return { keys, loaded, load, allows }
+  function isPremiumPlan(): boolean {
+    if (auth.entitlements?.whatsapp_chatbot === true) {
+      return true
+    }
+    const hay = `${auth.user?.billing?.plan?.slug ?? ''} ${auth.user?.billing?.plan?.name ?? ''}`.toLowerCase()
+
+    return hay.includes('premium') || hay.includes('enterprise')
+  }
+
+  return { keys, loaded, load, allows, isPremiumPlan }
 })
