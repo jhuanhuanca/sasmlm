@@ -77,6 +77,8 @@ export interface Product {
   is_expiring_soon?: boolean
   days_until_expiry?: number | null
   allocated_remaining?: number
+  assigned_remaining?: number
+  from_assignment?: boolean
 }
 
 export interface OrderItem {

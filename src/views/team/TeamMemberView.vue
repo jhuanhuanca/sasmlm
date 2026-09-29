@@ -231,7 +231,10 @@ function activityLabel(type: string): string {
           <SoftCard v-if="member.referred_id">
             <h2 class="font-medium">Vender de tu inventario</h2>
             <p class="mt-2 text-sm text-muted">
-              Si lo activas, este socio ve tu inventario personal en su panel y puede registrar ventas. Se descuenta tu stock. No ve costos ni puede editar productos.
+              Asignar unidades en Tienda → Inventario personal entrega stock a este socio: verá la lista en su panel, podrá vender y cobrar, y tú verás el movimiento en Control del equipo.
+            </p>
+            <p class="mt-2 text-sm text-muted">
+              Si además activas este permiso, también puede vender de lo que sigue en tu bodega (no solo lo asignado). No ve costos ni puede editar productos.
             </p>
             <label class="mt-4 flex items-start gap-3 text-sm">
               <input v-model="canSellInventory" class="mt-1" type="checkbox" />

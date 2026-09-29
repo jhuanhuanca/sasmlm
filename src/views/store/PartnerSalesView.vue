@@ -106,12 +106,12 @@ async function submitSale(payload: PlacePosOrderPayload): Promise<void> {
       <ModuleBanner
         icon="bag"
         eyebrow="Socio · ventas autorizadas"
-        title="Inventario de tu líder"
-        :body="`Con permiso de ${leaderName} puedes vender de su inventario personal. No ves costos ni editas productos: solo registras la venta y se descuenta su stock.`"
+        title="Lo que te asignó tu líder"
+        :body="`Aquí ves las unidades que ${leaderName} te entregó. Vendés y cobrás desde el panel: se descuenta tu lote y tu líder ve quién vendió. No ves costos ni editas productos.`"
         :actions="[
-          'Revisa existencias y precio de venta.',
-          'Registra una venta directa (retiro o envío).',
-          'Tus pedidos aparecen aquí y también en el equipo de tu líder.',
+          'Revisa existencias asignadas y precio de venta.',
+          'Registra la venta, cobra (marcado como pagado) o déjala pendiente.',
+          'El movimiento aparece en Control del equipo de tu líder.',
         ]"
       >
         <SoftButton
@@ -146,10 +146,14 @@ async function submitSale(payload: PlacePosOrderPayload): Promise<void> {
 
       <SoftCard :padded="false" class="mt-6 overflow-x-auto" data-tour="partner-sales-catalog">
         <div class="px-5 py-4">
-          <h2 class="font-medium">Productos personales de {{ leaderName }}</h2>
-          <p class="mt-1 text-sm text-muted">Sin costos de compra. El stock es el de su bodega.</p>
+          <h2 class="font-medium">Productos asignados</h2>
+          <p class="mt-1 text-sm text-muted">
+            Stock = unidades en tus manos. Si tu líder también te autorizó la bodega, verás esas existencias extra.
+          </p>
         </div>
-        <p v-if="!products.length" class="px-5 pb-5 text-sm text-muted">Aún no hay productos personales activos.</p>
+        <p v-if="!products.length" class="px-5 pb-5 text-sm text-muted">
+          Aún no te asignaron unidades. Pide a {{ leaderName }} que use Asignar en su inventario personal.
+        </p>
         <table v-else class="w-full min-w-[560px] text-left text-sm">
           <thead class="text-muted">
             <tr class="border-t border-line">
@@ -163,7 +167,14 @@ async function submitSale(payload: PlacePosOrderPayload): Promise<void> {
             <tr v-for="product in products" :key="product.id" class="border-t border-line">
               <td class="px-5 py-3">
                 <p class="font-medium">{{ product.name }}</p>
-                <p class="text-xs text-muted">{{ product.fulfillment === 'dropship' ? 'Envío del proveedor' : 'Inventario' }}</p>
+                <p class="text-xs text-muted">
+                  <template v-if="product.from_assignment">
+                    {{ product.assigned_remaining ?? product.stock }} en tus manos
+                    <span v-if="product.fulfillment === 'dropship'"> · envío del proveedor</span>
+                  </template>
+                  <template v-else-if="product.fulfillment === 'dropship'">Envío del proveedor</template>
+                  <template v-else>Bodega de {{ leaderName }}</template>
+                </p>
               </td>
               <td class="px-5 py-3">{{ money(product.price, product.currency) }}</td>
               <td class="px-5 py-3">{{ product.fulfillment === 'dropship' ? '—' : product.stock }}</td>

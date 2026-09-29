@@ -169,7 +169,7 @@ export const dinoTours: Record<DinoTourId, DinoTour> = {
         id: 'sales',
         target: 'partner-sales',
         title: 'Vender con permiso',
-        body: 'Esta tarjeta solo aparece si tu líder activó el permiso en tu ficha. Entras al inventario personal de él, registras la venta y se descuenta su stock. No ves costos ni editas productos.',
+        body: 'Esta tarjeta aparece si tu líder te asignó producto o te autorizó a vender. Entras a la lista de lo que tienes en mano, registras la venta, cobras y se descuenta tu lote. Tu líder lo ve en Control del equipo.',
         optional: true,
       },
       {
@@ -575,7 +575,7 @@ export const dinoTours: Record<DinoTourId, DinoTour> = {
         id: 'welcome',
         target: 'partner-sales-welcome',
         title: 'Inventario de tu líder',
-        body: 'Esto no es tu tienda. Es el inventario personal de tu líder, con su permiso. Registras la venta al cliente y se descuenta su stock. No ves lo que le costó ni puedes cambiar productos.',
+        body: 'Esto no es tu tienda ni solo el e-commerce. Es lo que tu líder te asignó. Registras la venta al cliente, cobras, y se descuenta tu lote. No ves lo que le costó ni puedes cambiar productos.',
       },
       {
         id: 'kpis',

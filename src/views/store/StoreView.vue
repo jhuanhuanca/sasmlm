@@ -771,10 +771,10 @@ async function applyStoreTargetMargin(): Promise<void> {
         tone="charcoal"
         icon="users"
         title="Control del equipo"
-        body="Unidades que entregaste de tu inventario y ventas pagadas atribuidas a cada miembro (enlace con ref). No se mezcla con PV ni con comisiones de plan."
+        body="Unidades que entregaste de tu inventario y ventas pagadas de cada miembro (panel POS o enlace con ref). No se mezcla con PV ni con comisiones de plan."
       >
         <p class="text-sm text-muted">
-          Usa Asignar en inventario personal para entregar stock. Aquí ves qué tiene cada quien y cuánto ya vendió.
+          Usa Asignar en inventario personal para entregar stock. El socio vende y cobra en su panel; aquí ves asignado, vendido y pendiente.
         </p>
       </SettingsBlock>
       <SettingsBlock

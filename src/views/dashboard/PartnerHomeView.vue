@@ -48,7 +48,7 @@ onMounted(() => {
       :actions="[
         'Abre Herramientas para asesorar a un cliente.',
         'Comparte la landing y la tienda de tu líder (con tu referido).',
-        'Si tu líder te autoriza, vende de su inventario personal.',
+        'Si tu líder te asigna producto o te autoriza, vende y cobra desde el panel.',
         'Cuando estés listo, elige un plan en Volverse líder.',
       ]"
     />
@@ -58,9 +58,9 @@ onMounted(() => {
       <RouterLink v-if="canSellLeaderInventory" to="/app/ventas" class="group" data-tour="partner-sales">
         <SoftCard class="h-full transition group-hover:-translate-y-0.5">
           <ClayTile name="bag" tone="mint" />
-          <h2 class="mt-4 text-lg font-semibold">Vender inventario del líder</h2>
+          <h2 class="mt-4 text-lg font-semibold">Vender y cobrar</h2>
           <p class="mt-2 text-sm text-muted">
-            {{ leaderName }} te autorizó a vender de su inventario personal. El stock se descuenta de su bodega.
+            Ves lo que {{ leaderName }} te asignó. Registras la venta, cobras y el movimiento llega a su inventario.
           </p>
           <p class="mt-4 text-sm font-medium">Abrir ventas →</p>
         </SoftCard>
