@@ -254,7 +254,7 @@ async function loadPulse(): Promise<void> {
       ]"
     >
       <RouterLink
-        to="/app/commissions"
+        to="/app/invitations"
         class="w-full max-w-xs rounded-card border border-line bg-card p-4 text-left shadow-sm transition hover:-translate-y-0.5"
       >
         <ClayTile name="gift" tone="lavender" size="md" />
@@ -266,7 +266,7 @@ async function loadPulse(): Promise<void> {
           Invita a un socio a liderar. Cuando paga el plan de lista, ganas el
           {{ REFERRAL_SUBSCRIPTION_COMMISSION_PERCENT }}&nbsp;% de esa suscripción: ingreso extra por referido.
         </p>
-        <p class="mt-3 text-sm font-medium">Ver comisiones →</p>
+        <p class="mt-3 text-sm font-medium">Invitar y compartir →</p>
       </RouterLink>
     </ModuleBanner>
     </div>

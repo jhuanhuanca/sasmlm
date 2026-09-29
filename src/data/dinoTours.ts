@@ -267,6 +267,12 @@ export const dinoTours: Record<DinoTourId, DinoTour> = {
         body: 'Escribe el correo y envía. El sistema manda el email con el enlace de registro. Si no llega, usa el mismo correo otra vez: se reenvía. El token en claro aparece una sola vez a la derecha: si lo pierdes, genera otra invitación.',
       },
       {
+        id: 'share',
+        target: 'invite-share',
+        title: 'Enlace para quien no te dio el correo',
+        body: 'Arriba está el enlace genérico. Cópialo o mándalo por WhatsApp, Facebook o Instagram. Quien se registre con ese enlace entra a tu red. No reemplaza el correo: es para gente que aún no conoces por email.',
+      },
+      {
         id: 'after',
         target: 'invite-after',
         title: 'Qué pasa después',

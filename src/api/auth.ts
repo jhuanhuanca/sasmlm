@@ -14,6 +14,10 @@ export async function login(body: LoginBody): Promise<AuthPayload> {
   return api<AuthPayload>('/auth/login', { method: 'POST', body })
 }
 
+export async function fetchSponsorPreview(id: number): Promise<{ id: number; name: string }> {
+  return api<{ id: number; name: string }>(`/auth/sponsors/${id}`)
+}
+
 export async function fetchRegistrationOptions(): Promise<RegistrationOptions> {
   return api<RegistrationOptions>('/auth/registration-options')
 }

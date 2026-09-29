@@ -1,15 +1,21 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { createInvitation } from '@/api/invitations'
+import ShareInviteBar from '@/components/invitations/ShareInviteBar.vue'
 import SoftButton from '@/components/ui/SoftButton.vue'
 import SoftCard from '@/components/ui/SoftCard.vue'
 import SoftField from '@/components/ui/SoftField.vue'
 import ModuleBanner from '@/components/ui/ModuleBanner.vue'
+import { REFERRAL_SUBSCRIPTION_COMMISSION_PERCENT } from '@/data/referral'
 import { useToast } from '@/composables/useToast'
+import { useAuthStore } from '@/stores/auth'
 import type { InvitationCreated } from '@/types/mlm'
 import { errorMessage, fieldErrors } from '@/utils/http'
 import { fieldControlClass } from '@/utils/ui'
 
+const auth = useAuthStore()
+const { user } = storeToRefs(auth)
 const email = ref('')
 const loading = ref(false)
 const errors = ref<Record<string, string[]>>({})
@@ -23,6 +29,20 @@ const inviteLink = computed(() => {
   }
 
   return `${window.location.origin}/register?token=${created.value.token}`
+})
+
+const shareUrl = computed(() => {
+  const id = user.value?.id
+  if (!id) {
+    return ''
+  }
+
+  return `${window.location.origin}/register?ref=${id}`
+})
+
+const shareMessage = computed(() => {
+  const name = user.value?.name ?? 'Un líder'
+  return `${name} te invita a REXmlm. Entra a su red con este enlace: ${shareUrl.value}`
 })
 
 async function submit(): Promise<void> {
@@ -70,14 +90,23 @@ async function copyLink(): Promise<void> {
       icon="mail"
       eyebrow="Líder"
       title="Invitaciones"
-      body="Envías un correo con el enlace de alta. Si el socio no lo ve, vuelve a ingresar el mismo correo para reenviarlo. El enlace de respaldo aparece aquí una vez."
+      body="Invita por correo o comparte un enlace genérico si no tienes el email. Quien se registre con tu enlace entra a tu red como socio. Si más adelante paga el plan de lista, ganas la comisión de referido."
       :actions="[
-        'Escribe el correo del socio y envía; le llega un email con el enlace.',
-        'Si no llega, vuelve a enviar el mismo correo para reenviar la invitación.',
-        'Cuando acepte, lo verás en Equipo para darle seguimiento.',
+        'Si conoces el correo: envía la invitación y le llega el email.',
+        'Si no lo conoces: comparte el enlace genérico por WhatsApp, Facebook o Instagram.',
+        'Cuando acepte, lo verás en Equipo. Si se hace líder, ganas el ' + REFERRAL_SUBSCRIPTION_COMMISSION_PERCENT + ' %.',
       ]"
     />
     </div>
+
+    <SoftCard v-if="shareUrl" class="mb-5" data-tour="invite-share">
+      <h2 class="font-medium">Enlace para compartir</h2>
+      <p class="mt-2 text-sm text-muted">
+        Úsalo con personas cuyo correo no tienes. No caduca: cada alta queda en tu red.
+      </p>
+      <p class="mt-3 break-all rounded-input bg-shell px-4 py-3 text-sm">{{ shareUrl }}</p>
+      <ShareInviteBar class="mt-4" :url="shareUrl" :message="shareMessage" />
+    </SoftCard>
 
     <div class="grid gap-5 lg:grid-cols-2">
       <SoftCard data-tour="invite-form">
@@ -107,7 +136,7 @@ async function copyLink(): Promise<void> {
         <ul class="mt-4 space-y-3 text-sm">
           <li class="flex gap-2">
             <span class="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-yellow text-[10px] font-semibold text-on-yellow">1</span>
-            El socio abre el correo que le enviamos (o el enlace de respaldo).
+            El socio abre el correo, el enlace de respaldo o tu enlace genérico.
           </li>
           <li class="flex gap-2">
             <span class="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-yellow text-[10px] font-semibold text-on-yellow">2</span>
@@ -115,7 +144,8 @@ async function copyLink(): Promise<void> {
           </li>
           <li class="flex gap-2">
             <span class="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-yellow text-[10px] font-semibold text-on-yellow">3</span>
-            En la ficha CRM le das seguimiento y notas.
+            En la ficha CRM le das seguimiento. Si se suscribe como líder, ganas el
+            {{ REFERRAL_SUBSCRIPTION_COMMISSION_PERCENT }}&nbsp;%.
           </li>
         </ul>
       </SoftCard>

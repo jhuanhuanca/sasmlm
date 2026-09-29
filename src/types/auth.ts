@@ -199,6 +199,7 @@ export interface RegisterBody {
   password: string
   password_confirmation: string
   invitation_token?: string
+  sponsor_id?: number
   country?: string
   catalog_company_name?: string
   catalog_rank_name?: string
@@ -226,6 +227,7 @@ export interface CountryOption {
 export interface GoogleAuthBody {
   id_token: string
   invitation_token?: string
+  sponsor_id?: number
   country?: string
   catalog_company_name?: string
   catalog_rank_name?: string

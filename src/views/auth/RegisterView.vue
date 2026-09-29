@@ -2,7 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { fetchInvitation } from '@/api/invitations'
-import { fetchRegistrationOptions } from '@/api/auth'
+import { fetchRegistrationOptions, fetchSponsorPreview } from '@/api/auth'
 import AuthPasswordField from '@/components/auth/AuthPasswordField.vue'
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton.vue'
 import SoftButton from '@/components/ui/SoftButton.vue'
@@ -19,8 +19,13 @@ const router = useRouter()
 const route = useRoute()
 
 const invitationToken = ref(typeof route.query.token === 'string' ? route.query.token : '')
+const sponsorId = computed(() => {
+  const raw = route.query.ref
+  const value = typeof raw === 'string' ? Number(raw) : NaN
+  return Number.isInteger(value) && value > 0 ? value : 0
+})
 const leaderName = ref('')
-const isLeaderSignup = computed(() => !invitationToken.value)
+const isLeaderSignup = computed(() => !invitationToken.value && sponsorId.value === 0)
 
 const form = reactive({
   name: '',
@@ -48,6 +53,13 @@ onMounted(async () => {
       leaderName.value = invitation.leader?.name ?? ''
     } catch {
       message.value = 'La invitación no es válida o ya expiró.'
+    }
+  } else if (sponsorId.value) {
+    try {
+      const sponsor = await fetchSponsorPreview(sponsorId.value)
+      leaderName.value = sponsor.name
+    } catch {
+      message.value = 'El enlace de referido no es válido.'
     }
   }
 
@@ -90,6 +102,7 @@ async function submit(): Promise<void> {
       password: form.password,
       password_confirmation: form.password_confirmation,
       invitation_token: invitationToken.value || undefined,
+      sponsor_id: !invitationToken.value && sponsorId.value ? sponsorId.value : undefined,
       ...(isLeaderSignup.value ? affiliationPayload() : {}),
     })
     await router.replace('/app')
@@ -108,6 +121,7 @@ const googleReady = computed(
     Boolean(googleClientId.value) &&
     acceptTerms.value &&
     (Boolean(invitationToken.value) ||
+      sponsorId.value > 0 ||
       Boolean(form.country && form.catalog_company_name.trim() && form.catalog_rank_name.trim())),
 )
 
@@ -125,6 +139,7 @@ async function onGoogleCredential(idToken: string): Promise<void> {
     await auth.loginWithGoogle({
       id_token: idToken,
       invitation_token: invitationToken.value || undefined,
+      sponsor_id: !invitationToken.value && sponsorId.value ? sponsorId.value : undefined,
       ...(isLeaderSignup.value ? affiliationPayload() : {}),
     })
     await router.replace('/app')
@@ -143,10 +158,10 @@ async function onGoogleCredential(idToken: string): Promise<void> {
   <AuthLayout
     wide
     with-tagline
-    :kicker="invitationToken ? 'Invitación' : 'Alta de cuenta'"
-    :title="invitationToken ? 'Únete al equipo' : 'Crea tu cuenta'"
+    :kicker="invitationToken || sponsorId ? 'Invitación' : 'Alta de cuenta'"
+    :title="invitationToken || sponsorId ? 'Únete al equipo' : 'Crea tu cuenta'"
     :subtitle="
-      invitationToken
+      invitationToken || sponsorId
         ? `Te invita ${leaderName || 'un titular'}. Completa tus datos para entrar como colaborador.`
         : 'Indica tu empresa y rango tal como los usas. No hace falta elegirlos de un catálogo.'
     "
@@ -270,7 +285,7 @@ async function onGoogleCredential(idToken: string): Promise<void> {
         "
         block
       >
-        {{ loading ? 'Creando cuenta…' : invitationToken ? 'Aceptar invitación' : 'Crear cuenta' }}
+        {{ loading ? 'Creando cuenta…' : invitationToken || sponsorId ? 'Aceptar invitación' : 'Crear cuenta' }}
       </SoftButton>
     </form>
     <GoogleSignInButton
