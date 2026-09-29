@@ -281,7 +281,7 @@ onMounted(() => {
       </div>
 
       <div class="space-y-8">
-        <SoftCard v-if="showBilling" class="space-y-5" data-tour="profile-billing">
+        <SoftCard v-if="showBilling" id="mejorar-plan" class="space-y-5" data-tour="profile-billing">
           <div>
             <h2 class="font-display text-xl font-bold">Suscripción</h2>
             <p class="mt-1 text-sm text-muted">Plan de líder, facturas de Paddle y cambio de paquete.</p>

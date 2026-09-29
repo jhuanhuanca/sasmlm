@@ -25,6 +25,7 @@ const clayToneFor: Record<IconName, ClayTone> = {
   wallet: 'royal',
   calendar: 'lavender',
   clipboard: 'lavender',
+  gift: 'lavender',
   file: 'mint',
   star: 'yellow',
   gear: 'sky',

@@ -73,7 +73,7 @@ export const dinoTours: Record<DinoTourId, DinoTour> = {
         id: 'nav',
         target: 'app-nav',
         title: 'Las puertas de tu negocio',
-        body: 'Arriba está el menú. Dashboard es el resumen. Equipo son las personas. Invitaciones manda el correo para sumar un socio. Tienda es tu e-commerce. Landing es tu página pública. Herramientas te ayudan a asesorar. Comisiones es el 10 % cuando alguien se hace líder. Cierre de mes es el reporte. Soporte escribe a la plataforma.',
+        body: 'Arriba está el menú. Dashboard es el resumen. Equipo son las personas. Invitaciones manda el correo para sumar un socio. Tienda es tu e-commerce. Landing es tu página pública. Herramientas te ayudan a asesorar. Comisiones es el 20 % cuando alguien se hace líder. Cierre de mes es el reporte. Soporte escribe a la plataforma.',
       },
       {
         id: 'tools',

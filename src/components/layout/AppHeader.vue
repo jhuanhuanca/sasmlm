@@ -27,7 +27,7 @@ const router = useRouter()
 const auth = useAuthStore()
 const theme = useThemeStore()
 const tour = useDinoTourStore()
-const { user, isLeader, isAdmin, isPartnerOnly, canSellLeaderInventory, entitlements, hasPaidAccess } = storeToRefs(auth)
+const { user, isLeader, isAdmin, isPartnerOnly, canSellLeaderInventory, hasPaidAccess } = storeToRefs(auth)
 const menuOpen = ref(false)
 const accountOpen = ref(false)
 const accountMenu = ref<HTMLElement | null>(null)
@@ -83,21 +83,15 @@ const links = computed((): NavLink[] => {
 
   return [
     { to: '/app', name: 'dashboard', label: 'Dashboard', icon: 'home' },
-    ...(canLead.value && entitlements.value?.team !== false
+    ...(canLead.value
       ? ([
           { to: '/app/team', name: 'team', label: 'Equipo', icon: 'users' },
           { to: '/app/invitations', name: 'invitations', label: 'Invitaciones', icon: 'mail' },
-        ] satisfies NavLink[])
-      : []),
-    ...(entitlements.value?.store !== false ? ([{ to: '/app/store', name: 'store', label: 'Tienda', icon: 'bag' }] satisfies NavLink[]) : []),
-    ...(entitlements.value?.landing !== false ? ([{ to: '/app/landing', name: 'landing', label: 'Landing', icon: 'zap' }] satisfies NavLink[]) : []),
-    ...(entitlements.value?.tools !== false ? ([{ to: '/app/tools', name: 'tools', label: 'Herramientas', icon: 'heart' }] satisfies NavLink[]) : []),
-    ...(canLead.value
-      ? ([
+          { to: '/app/store', name: 'store', label: 'Tienda', icon: 'bag' },
+          { to: '/app/landing', name: 'landing', label: 'Landing', icon: 'zap' },
+          { to: '/app/tools', name: 'tools', label: 'Herramientas', icon: 'heart' },
           { to: '/app/commissions', name: 'commissions', label: 'Comisiones', icon: 'wallet' },
-          ...(entitlements.value?.closing !== false
-            ? ([{ to: '/app/cierre', name: 'monthly-closing', label: 'Cierre de mes', shortLabel: 'Cierre', icon: 'calendar' }] satisfies NavLink[])
-            : []),
+          { to: '/app/cierre', name: 'monthly-closing', label: 'Cierre de mes', shortLabel: 'Cierre', icon: 'calendar' },
           { to: '/app/soporte', name: 'support', label: 'Soporte', icon: 'clipboard' },
         ] satisfies NavLink[])
       : []),

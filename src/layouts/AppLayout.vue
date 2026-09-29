@@ -2,17 +2,22 @@
 import { computed } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
+import PlanUpgradeCard from '@/components/billing/PlanUpgradeCard.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import DinoTourHost from '@/components/tour/DinoTourHost.vue'
 import { useAuthStore } from '@/stores/auth'
+import { usePlanAccess } from '@/composables/usePlanAccess'
 import { useThemeStore } from '@/stores/theme'
 import { companyThemeVars } from '@/utils/brand'
+import type { PlanModuleKey } from '@/data/planModules'
 
 useThemeStore()
 
 const route = useRoute()
 const auth = useAuthStore()
+const { canUse } = usePlanAccess()
 const { user, isLeader, hasPaidAccess } = storeToRefs(auth)
+
 const companyVars = computed(() => {
   const path = String(route.path)
   if (path.startsWith('/app/landing')) {
@@ -33,6 +38,30 @@ const companyVars = computed(() => {
 
 const showAppFooter = computed(() => !String(route.path).startsWith('/app/landing'))
 const billingLocked = computed(() => isLeader.value && hasPaidAccess.value === false)
+
+const lockedModule = computed((): PlanModuleKey | null => {
+  if (auth.isAdmin || billingLocked.value) {
+    return null
+  }
+
+  if (route.name === 'tools-whatsapp-chatbot' && !canUse('whatsapp_chatbot')) {
+    return 'whatsapp_chatbot'
+  }
+
+  if (String(route.path).startsWith('/app/tools') && !canUse('tools')) {
+    return 'tools'
+  }
+
+  const feature = route.meta.planFeature
+  if (typeof feature === 'string' && feature !== 'tools') {
+    const key = feature as PlanModuleKey
+    if (!canUse(key)) {
+      return key
+    }
+  }
+
+  return null
+})
 </script>
 
 <template>
@@ -55,7 +84,8 @@ const billingLocked = computed(() => isLeader.value && hasPaidAccess.value === f
           Regularizar pago
         </RouterLink>
       </div>
-      <RouterView />
+      <PlanUpgradeCard v-if="lockedModule" :feature="lockedModule" />
+      <RouterView v-else />
       <footer
         v-if="showAppFooter"
         class="mt-10 border-t border-line pb-28 pt-4 text-center text-[11px] leading-5 text-muted sm:pb-32"

@@ -61,7 +61,7 @@ export const legalDocs: Record<LegalSlug, LegalDoc> = {
       {
         title: '4. Programa de afiliados (opcional)',
         paragraphs: [
-          'Si recomiendas REXmlm a alguien que se suscribe por su cuenta y paga el precio de lista, podemos acreditarte una comisión única del 10 % sobre ese primer cobro de lista (no sobre el ciclo de US$ 1 ni sobre recargos de catálogo extra). No es un esquema multinivel: no se pagan niveles, no hay inventario obligatorio y no se exige reclutar personas para “ganar”.',
+          'Si recomiendas REXmlm a alguien que se suscribe por su cuenta y paga el precio de lista, podemos acreditarte una comisión única del 20 % sobre ese primer cobro de lista (no sobre el ciclo de US$ 1 ni sobre recargos de catálogo extra). No es un esquema multinivel: no se pagan niveles, no hay inventario obligatorio y no se exige reclutar personas para “ganar”.',
           'Está prohibido promover el software con spam, llamadas no solicitadas o mensajes masivos. El incumplimiento anula comisiones y puede cerrar la cuenta.',
         ],
       },

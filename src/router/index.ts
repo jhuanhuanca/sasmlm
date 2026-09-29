@@ -1,7 +1,5 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
-import { mediaKindToToolKey, type CompanyToolKey } from '@/data/companyTools'
 import { useAuthStore } from '@/stores/auth'
-import { useCompanyToolsStore } from '@/stores/companyTools'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -243,29 +241,16 @@ router.beforeEach(async (to) => {
 
   if (String(to.path).startsWith('/app/tools')) {
     const flags = auth.entitlements
-    if (flags && flags.tools === false) {
-      return { name: auth.hasPaidAccess ? 'dashboard' : 'become-leader' }
-    }
-  }
-
-  const toolKeyMeta = to.meta.toolKey
-  if (typeof toolKeyMeta === 'string') {
-    const companyTools = useCompanyToolsStore()
-    await companyTools.load()
-    const key: CompanyToolKey =
-      toolKeyMeta === 'media'
-        ? mediaKindToToolKey(String(to.params.kind ?? 'flyers'))
-        : (toolKeyMeta as CompanyToolKey)
-    if (!companyTools.allows(key)) {
-      return { name: 'tools' }
+    if (flags && flags.tools === false && !auth.hasPaidAccess) {
+      return { name: 'become-leader' }
     }
   }
 
   const feature = to.meta.planFeature
   if (typeof feature === 'string') {
     const flags = auth.entitlements
-    if (flags && flags[feature as keyof typeof flags] === false) {
-      return { name: auth.hasPaidAccess ? 'dashboard' : 'become-leader' }
+    if (flags && flags[feature as keyof typeof flags] === false && !auth.hasPaidAccess) {
+      return { name: 'become-leader' }
     }
   }
 

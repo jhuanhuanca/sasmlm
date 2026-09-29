@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import ClayTile from '@/components/ui/ClayTile.vue'
 import CompanyScopeBar from '@/components/company/CompanyScopeBar.vue'
 import ModuleBanner from '@/components/ui/ModuleBanner.vue'
 import SoftCard from '@/components/ui/SoftCard.vue'
 import { COMPANY_TOOL_CARDS } from '@/data/companyTools'
+import { PLAN_MODULE_COPY, toolNeedsPlan } from '@/data/planModules'
 import { useCompanyToolsStore } from '@/stores/companyTools'
+import { usePlanAccess } from '@/composables/usePlanAccess'
 
 const companyTools = useCompanyToolsStore()
-const tools = computed(() => COMPANY_TOOL_CARDS.filter((tool) => companyTools.allows(tool.key)))
+const { canUseTool } = usePlanAccess()
 
 onMounted(() => {
   void companyTools.load()
@@ -23,30 +25,29 @@ onMounted(() => {
       icon="heart"
       eyebrow="Herramientas"
       title="Kit para asesorar"
-      body="Recursos para hablar con claridad con un cliente o un socio: protocolos de bienestar, IMC, material descargable y WhatsApp. No reemplazan una consulta médica."
+      body="Ves el kit completo. Si una tarjeta no está en tu plan, al abrirla te pedimos mejorar el plan."
       :actions="[
         'Elige una dolencia y copia el protocolo de tu empresa.',
         'Mide IMC y abre el paquete de peso.',
         'Descarga flyers, PDFs, videos o audios para compartir.',
         'Mide talla de anillo o prueba una joya en AR.',
-        'Con Premium: chatbot WhatsApp (ingresar, configurar o pedir ayuda).',
+        'Chatbot WhatsApp: ingresar, configurar o pedir ayuda (Premium).',
       ]"
     />
     </div>
 
     <CompanyScopeBar class="mt-4" label="Herramientas de" @changed="companyTools.load(true)" />
 
-    <p v-if="companyTools.loaded && !tools.length" class="mt-8 text-sm text-muted">
-      Esta empresa no tiene herramientas activas. El administrador las elige en el catálogo.
-    </p>
-
     <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" data-tour="tools-grid">
-      <RouterLink v-for="tool in tools" :key="tool.key" :to="tool.to!" class="group">
+      <RouterLink v-for="tool in COMPANY_TOOL_CARDS" :key="tool.key" :to="tool.to || '/app/tools'" class="group">
         <SoftCard class="h-full transition group-hover:-translate-y-0.5">
           <ClayTile :name="tool.icon" :tone="tool.tone" size="md" />
           <h2 class="mt-4 text-lg font-semibold">{{ tool.title }}</h2>
           <p class="mt-2 text-sm text-muted">{{ tool.hint }}</p>
-          <p class="mt-4 text-sm font-medium">Abrir →</p>
+          <p v-if="canUseTool(tool.key)" class="mt-4 text-sm font-medium">Abrir →</p>
+          <p v-else class="mt-4 text-sm font-medium text-red-700">
+            En {{ PLAN_MODULE_COPY[toolNeedsPlan(tool.key)].includedIn }} →
+          </p>
         </SoftCard>
       </RouterLink>
     </div>

@@ -29,7 +29,7 @@ defineProps<{
           </li>
         </ul>
       </div>
-      <div v-if="$slots.default" class="flex shrink-0 flex-wrap items-start gap-2 sm:pt-1">
+      <div v-if="$slots.default" class="flex w-full shrink-0 flex-wrap items-start gap-2 sm:w-auto sm:max-w-xs sm:pt-1">
         <slot />
       </div>
     </div>

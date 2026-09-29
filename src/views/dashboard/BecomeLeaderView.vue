@@ -7,6 +7,7 @@ import SoftCard from '@/components/ui/SoftCard.vue'
 import ModuleBanner from '@/components/ui/ModuleBanner.vue'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
+import { planCatalogRows } from '@/data/planModules'
 import type { Plan } from '@/types/mlm'
 import { errorMessage } from '@/utils/http'
 import { money } from '@/utils/format'
@@ -23,19 +24,17 @@ const toast = useToast()
 const monthly = computed(() => plans.value.filter((plan) => plan.interval === 'month'))
 const selected = computed(() => plans.value.find((plan) => plan.id === selectedId.value) ?? null)
 
-function entitlementLines(plan: Plan): string[] {
+function extraPlanLines(plan: Plan): string[] {
   const e = plan.entitlements as Record<string, unknown> | undefined
   if (!e) {
     return []
   }
   const lines: string[] = []
-  lines.push(e.landing ? 'Página propia' : 'Sin página pública')
-  lines.push(e.store ? 'Tienda, inventario y POS' : 'Sin tienda propia')
-  lines.push(e.tools ? 'IMC, flyers y bienestar' : 'Sin herramientas de ficha')
-  if (e.whatsapp_chatbot) {
-    lines.push('Chatbot WhatsApp (API, otra ventana)')
-  }
-  lines.push(e.partner_sell ? 'Los colaboradores pueden vender tu inventario' : 'Los colaboradores no venden tu inventario')
+  lines.push(
+    e.partner_sell
+      ? 'Los colaboradores pueden vender tu inventario'
+      : 'Los colaboradores no venden tu inventario (mejora de plan)',
+  )
   const max = e.max_partners
   lines.push(max ? `Hasta ${max} colaboradores` : 'Sin tope práctico de colaboradores')
   lines.push(Number(e.extra_companies) > 0 ? '1 catálogo extra incluido' : 'Catálogo extra: US$ 15/mes')
@@ -100,9 +99,9 @@ async function subscribe(): Promise<void> {
       title="Elige tu plan de software"
       body="Suscripción SaaS. El primer ciclo por US$ 1 con tarjeta. Después Paddle cobra el precio de lista. El colaborador invitado no paga el plan. Los cobros de plataforma los formaliza Paddle como comerciante registrado."
       :actions="[
-        'Básico: equipo y página. Sin tienda.',
-        'Intermedio: tienda, inventario y que tus colaboradores vendan tu stock.',
-        'Premium: un catálogo extra incluido y soporte prioritario.',
+        'Los tres planes muestran el mismo catálogo de módulos.',
+        'En Básico e Intermedio, lo que no esté incluido pide mejorar el plan al usarlo.',
+        'Premium incluye chatbot WhatsApp y un catálogo extra.',
         'Tarjeta el día 1. Aviso 2 días antes de la renovación. Reembolso de 14 días en el primer cobro.',
       ]"
     />
@@ -136,8 +135,15 @@ async function subscribe(): Promise<void> {
           {{ money(plan.price, plan.currency) }}
           <span class="text-sm font-normal text-muted">desde el mes 2</span>
         </p>
-        <ul class="mt-4 space-y-1 text-sm text-muted">
-          <li v-for="line in entitlementLines(plan)" :key="line">{{ line }}</li>
+        <ul class="mt-4 space-y-1 text-sm">
+          <li
+            v-for="row in planCatalogRows(plan.entitlements)"
+            :key="row.key"
+            :class="row.included ? 'text-muted' : 'text-red-700'"
+          >
+            {{ row.included ? row.label : `${row.label} · mejora de plan` }}
+          </li>
+          <li v-for="line in extraPlanLines(plan)" :key="line" class="text-muted">{{ line }}</li>
         </ul>
       </button>
     </div>

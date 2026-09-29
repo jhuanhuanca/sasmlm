@@ -128,7 +128,7 @@ onMounted(load)
       icon="wallet"
       eyebrow="Líder"
       title="Comisiones"
-      body="Ganas el 10 % cuando un socio que invitaste se suscribe como líder. Esas comisiones y los retiros son siempre en dólares (USD), aunque tu tienda venda en otra moneda. No es bono de producto ni venta de tienda."
+      body="Ganas el 20 % cuando un socio que invitaste se suscribe como líder. Esas comisiones y los retiros son siempre en dólares (USD), aunque tu tienda venda en otra moneda. No es bono de producto ni venta de tienda."
       :actions="[
         'Revisa lo disponible, lo pendiente y lo ya pagado.',
         'Solicita el cobro con WhatsApp y tu contraseña.',

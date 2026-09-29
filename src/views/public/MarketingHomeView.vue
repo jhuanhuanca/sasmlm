@@ -60,19 +60,20 @@ const packs = [
     name: 'Básico',
     price: 29,
     annual: 290,
-    blurb: 'Equipo, invitaciones y página. Sin tienda propia.',
+    blurb: 'Ves todo el catálogo. Tienda, herramientas y cierre piden mejorar el plan.',
     cta: 'Empezar Básico',
     featured: false,
     items: [
       { on: true, text: 'Equipo, invitaciones y seguimiento interno' },
-      { on: true, text: 'Página pública' },
-      { on: true, text: 'Cierre de mes: resumen' },
+      { on: true, text: 'Landing pública' },
       { on: true, text: '1 catálogo de empresa' },
       { on: true, text: 'Hasta 50 colaboradores' },
       { on: true, text: 'Soporte estándar' },
-      { on: false, text: 'Herramientas de ficha (IMC, flyers, bienestar)' },
-      { on: false, text: 'Tienda, inventario y POS' },
-      { on: false, text: 'Colaboradores venden tu inventario' },
+      { on: false, text: 'Tienda, inventario y POS · mejora de plan' },
+      { on: false, text: 'Herramientas (IMC, bienestar, material, anillos) · mejora de plan' },
+      { on: false, text: 'Cierre de mes completo · mejora de plan' },
+      { on: false, text: 'Colaboradores venden tu inventario · mejora de plan' },
+      { on: false, text: 'Chatbot WhatsApp · Premium' },
       { on: false, text: 'Catálogo extra: add-on US$ 15/mes' },
     ],
   },
@@ -85,14 +86,15 @@ const packs = [
     cta: 'Elegir Intermedio',
     featured: true,
     items: [
-      { on: true, text: 'Equipo, invitaciones, seguimiento y página' },
-      { on: true, text: 'Herramientas de ficha (IMC, flyers, bienestar)' },
+      { on: true, text: 'Equipo, invitaciones, seguimiento y landing' },
+      { on: true, text: 'Herramientas (IMC, bienestar, material, anillos)' },
       { on: true, text: 'Tienda, inventario y POS' },
       { on: true, text: 'Colaboradores pueden vender tu inventario' },
       { on: true, text: 'Cierre de mes completo' },
       { on: true, text: '1 catálogo de empresa' },
       { on: true, text: 'Hasta 500 colaboradores' },
       { on: true, text: 'Soporte estándar' },
+      { on: false, text: 'Chatbot WhatsApp · Premium' },
       { on: false, text: 'Catálogo extra: add-on US$ 15/mes' },
     ],
   },
@@ -105,11 +107,14 @@ const packs = [
     cta: 'Elegir Premium',
     featured: false,
     items: [
-      { on: true, text: 'Todo lo de Intermedio' },
-      { on: true, text: 'Cierre completo + prioridad' },
+      { on: true, text: 'Equipo, invitaciones, seguimiento y landing' },
+      { on: true, text: 'Herramientas (IMC, bienestar, material, anillos)' },
+      { on: true, text: 'Tienda, inventario y POS' },
+      { on: true, text: 'Colaboradores pueden vender tu inventario' },
+      { on: true, text: 'Cierre de mes completo' },
+      { on: true, text: 'Chatbot WhatsApp (Vendedor Live)' },
       { on: true, text: 'Sin tope práctico de colaboradores' },
       { on: true, text: 'Principal + 1 catálogo extra incluido' },
-      { on: true, text: 'Siguientes catálogos: US$ 15/mes' },
       { on: true, text: 'Soporte prioritario' },
     ],
   },
@@ -263,7 +268,7 @@ async function submitContact(): Promise<void> {
           <span class="mk-kicker">Afiliados</span>
           <h2 class="mk-h2">Una comisión, un pago de lista</h2>
           <p class="mk-lead">
-            Si alguien crea su propia cuenta y paga el precio de lista del software, puedes recibir el 10 % de ese
+            Si alguien crea su propia cuenta y paga el precio de lista del software, puedes recibir el 20 % de ese
             primer cobro de lista. Una sola vez. No hay niveles, ni cuota por reclutar, ni inventario obligatorio.
           </p>
           <ul class="mk-checks">

@@ -34,6 +34,7 @@ export type IconName =
   | 'chart'
   | 'calendar'
   | 'clipboard'
+  | 'gift'
 
 withDefaults(
   defineProps<{
@@ -178,6 +179,13 @@ withDefaults(
       <rect x="6" y="5" width="12" height="16" rx="2" />
       <path d="M9 5.5V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V5.5" />
       <path d="M9 11h6M9 15h4" stroke-linecap="round" />
+    </g>
+    <g v-else-if="name === 'gift'" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
+      <rect x="3.5" y="11" width="17" height="9.5" rx="1.5" />
+      <path d="M3.5 8.5h17v2.5h-17z" />
+      <path d="M12 8.5v12" stroke-linecap="round" />
+      <path d="M12 8.5c0-2.2-1.2-4.2-3.4-4.2A2.4 2.4 0 0 0 6.4 6.4C6.4 8.2 9 8.5 12 8.5Z" />
+      <path d="M12 8.5c0-2.2 1.2-4.2 3.4-4.2a2.4 2.4 0 0 1 2.2 2.1C17.6 8.2 15 8.5 12 8.5Z" />
     </g>
   </svg>
 </template>
