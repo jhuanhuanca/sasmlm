@@ -17,6 +17,11 @@ const routes: RouteRecordRaw[] = [
     redirect: '/',
   },
   {
+    path: '/promo',
+    name: 'promo',
+    component: () => import('@/views/public/PromoLandingView.vue'),
+  },
+  {
     path: '/login',
     name: 'login',
     component: () => import('@/views/auth/LoginView.vue'),

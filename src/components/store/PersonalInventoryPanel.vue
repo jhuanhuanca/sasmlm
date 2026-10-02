@@ -34,6 +34,9 @@ const emit = defineEmits<{
 const isIncentive = computed(() => props.kind === 'incentive')
 
 const csvInput = ref<HTMLInputElement | null>(null)
+const imageInput = ref<HTMLInputElement | null>(null)
+const imageFile = ref<File | null>(null)
+const imagePreview = ref('')
 const editingId = ref<number | null>(null)
 const newCategoryName = ref('')
 const categoryFilter = ref<'all' | 'none' | number>('all')
@@ -184,6 +187,7 @@ function payload(): ProductPayload {
     incentive_qty: Number(form.incentive_qty || 1),
     stock: Number(form.stock),
     image: form.image || null,
+    imageFile: imageFile.value,
     is_active: form.is_active,
     is_published: form.is_published,
     fulfillment: form.fulfillment,
@@ -207,6 +211,7 @@ function resetForm(): void {
   form.incentive_qty = 1
   form.stock = 1
   form.image = ''
+  clearImageFile()
   form.is_active = true
   form.is_published = true
   form.fulfillment = 'stock'
@@ -232,6 +237,7 @@ async function edit(product: Product): Promise<void> {
   form.incentive_qty = product.incentive_qty || 1
   form.stock = product.stock
   form.image = product.image ?? ''
+  clearImageFile()
   form.is_active = product.is_active
   form.is_published = product.is_published !== false
   form.fulfillment = product.fulfillment === 'dropship' ? 'dropship' : 'stock'
@@ -272,6 +278,30 @@ function saveRename(): void {
     emit('updateCategory', renamingId.value, name)
   }
   renamingId.value = null
+}
+
+function onImageFile(event: Event): void {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0] ?? null
+  if (!file) {
+    return
+  }
+  if (imagePreview.value.startsWith('blob:')) {
+    URL.revokeObjectURL(imagePreview.value)
+  }
+  imageFile.value = file
+  imagePreview.value = URL.createObjectURL(file)
+}
+
+function clearImageFile(): void {
+  if (imagePreview.value.startsWith('blob:')) {
+    URL.revokeObjectURL(imagePreview.value)
+  }
+  imageFile.value = null
+  imagePreview.value = ''
+  if (imageInput.value) {
+    imageInput.value.value = ''
+  }
 }
 
 function onCsv(event: Event): void {
@@ -491,8 +521,30 @@ defineExpose({ resetForm })
           <SoftField label="Ficha técnica">
             <textarea v-model="form.technical_sheet" :class="fieldControlClass" rows="3" placeholder="Composición, uso, advertencias…" />
           </SoftField>
-          <SoftField label="Imagen (URL)" :error="errors.image?.[0]">
-            <input v-model="form.image" :class="fieldControlClass" placeholder="https://..." />
+          <SoftField label="Imagen" :error="errors.image?.[0] || errors.file?.[0]">
+            <div class="flex flex-col gap-2">
+              <input
+                ref="imageInput"
+                :class="fieldControlClass"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                @change="onImageFile"
+              />
+              <input
+                v-model="form.image"
+                :class="fieldControlClass"
+                placeholder="o pega una URL https://…"
+              />
+              <p class="text-xs text-muted">
+                Sube un archivo (JPG, PNG, WebP o GIF). Se guarda en el catálogo. También puedes pegar una URL.
+              </p>
+              <img
+                v-if="imagePreview || form.image"
+                :src="imagePreview || form.image"
+                alt=""
+                class="h-24 w-24 rounded-xl object-cover"
+              />
+            </div>
           </SoftField>
           <label class="flex items-center gap-2 text-sm">
             <input v-model="form.is_active" type="checkbox" />

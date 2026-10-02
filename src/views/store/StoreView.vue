@@ -19,6 +19,7 @@ import {
   updateMyStore,
   updateProduct,
   updateStoreCategory,
+  uploadInventoryImage,
 } from '@/api/store'
 import { fetchTeamRoster } from '@/api/dashboard'
 import SoftButton from '@/components/ui/SoftButton.vue'
@@ -194,11 +195,23 @@ onMounted(() => {
   void load()
 })
 
+async function persistPayload(payload: ProductPayload): Promise<ProductPayload> {
+  const file = payload.imageFile ?? null
+  const next: ProductPayload = { ...payload }
+  delete next.imageFile
+  if (!file) {
+    return next
+  }
+  const uploaded = await uploadInventoryImage(file, next.source === 'incentive' ? 'incentive' : 'personal')
+  next.image = uploaded.url
+  return next
+}
+
 async function addProduct(payload: ProductPayload): Promise<void> {
   errors.value = {}
   saving.value = true
   try {
-    const product = await createProduct(payload)
+    const product = await createProduct(await persistPayload(payload))
     products.value.unshift(product)
     if (payload.source === 'incentive') {
       incentivePanel.value?.resetForm()
@@ -221,7 +234,7 @@ async function savePersonal(id: number, payload: ProductPayload): Promise<void> 
   errors.value = {}
   saving.value = true
   try {
-    const product = await updateProduct(id, payload)
+    const product = await updateProduct(id, await persistPayload(payload))
     products.value = products.value.map((item) => (item.id === id ? product : item))
     if (payload.source === 'incentive') {
       incentivePanel.value?.resetForm()
@@ -712,7 +725,7 @@ async function applyStoreTargetMargin(): Promise<void> {
       </div>
       <ReportExportBar
         label="Reporte de inventario"
-        hint="Personal, incentivos, empresa y asignaciones"
+        hint="Solo inventario personal y sus ventas"
         path="/my-store/reports/inventory"
         file-base="inventario"
       />

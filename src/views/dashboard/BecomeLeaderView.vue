@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { fetchPlans, subscribeAsLeader } from '@/api/subscription'
 import SoftButton from '@/components/ui/SoftButton.vue'
 import SoftCard from '@/components/ui/SoftCard.vue'
@@ -11,9 +11,11 @@ import { planCatalogRows } from '@/data/planModules'
 import type { Plan } from '@/types/mlm'
 import { errorMessage } from '@/utils/http'
 import { money } from '@/utils/format'
+import { peekPendingPlan, rememberPendingPlan } from '@/utils/pendingPlan'
 
 const auth = useAuthStore()
 const router = useRouter()
+const route = useRoute()
 const plans = ref<Plan[]>([])
 const selectedId = ref<number | null>(null)
 const loading = ref(true)
@@ -44,8 +46,16 @@ function extraPlanLines(plan: Plan): string[] {
 onMounted(async () => {
   try {
     plans.value = await fetchPlans()
-    const recommended = monthly.value.find((plan) => plan.recommended) ?? monthly.value[0] ?? plans.value[0]
-    selectedId.value = recommended?.id ?? null
+    const fromQuery = Number(route.query.plan ?? 0)
+    const wanted = Number.isInteger(fromQuery) && fromQuery > 0 ? fromQuery : peekPendingPlan()
+    const match = plans.value.find((plan) => plan.id === wanted)
+    if (match) {
+      selectedId.value = match.id
+      rememberPendingPlan(match.id)
+    } else {
+      const recommended = monthly.value.find((plan) => plan.recommended) ?? monthly.value[0] ?? plans.value[0]
+      selectedId.value = recommended?.id ?? null
+    }
   } catch (error) {
     message.value = errorMessage(error, 'No se pudieron cargar los planes')
   } finally {

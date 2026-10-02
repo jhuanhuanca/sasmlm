@@ -98,6 +98,22 @@ export async function updateProduct(id: number, body: Partial<ProductPayload>): 
   return unwrapData(payload)
 }
 
+export async function uploadInventoryImage(
+  file: File,
+  kind: 'personal' | 'incentive' = 'personal',
+): Promise<{ uuid: string; url: string; kind: string; mime: string; size: number; original_name: string }> {
+  const body = new FormData()
+  body.append('file', file)
+  body.append('kind', kind)
+
+  const payload = await api<
+    | { uuid: string; url: string; kind: string; mime: string; size: number; original_name: string }
+    | LaravelData<{ uuid: string; url: string; kind: string; mime: string; size: number; original_name: string }>
+  >('/products/image', { method: 'POST', body })
+
+  return unwrapData(payload)
+}
+
 export async function deleteProduct(id: number): Promise<void> {
   await api(`/products/${id}`, { method: 'DELETE' })
 }

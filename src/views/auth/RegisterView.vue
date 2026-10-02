@@ -13,6 +13,7 @@ import { useToast } from '@/composables/useToast'
 import type { CountryOption } from '@/types/auth'
 import { errorMessage, fieldErrors } from '@/utils/http'
 import { authFieldControlClass } from '@/utils/ui'
+import { rememberPendingPlan, takePendingPlan } from '@/utils/pendingPlan'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -44,8 +45,16 @@ const countries = ref<CountryOption[]>([])
 const acceptTerms = ref(false)
 const toast = useToast()
 const googleClientId = ref('')
+const planId = computed(() => {
+  const raw = route.query.plan
+  const value = typeof raw === 'string' ? Number(raw) : NaN
+  return Number.isInteger(value) && value > 0 ? value : 0
+})
 
 onMounted(async () => {
+  if (planId.value) {
+    rememberPendingPlan(planId.value)
+  }
   if (invitationToken.value) {
     try {
       const invitation = await fetchInvitation(invitationToken.value)
@@ -77,6 +86,20 @@ onMounted(async () => {
   }
 })
 
+function goAfterSignup(): Promise<unknown> {
+  if (invitationToken.value || sponsorId.value) {
+    return router.replace('/app')
+  }
+
+  const pending = planId.value || takePendingPlan()
+  if (pending) {
+    rememberPendingPlan(pending)
+    return router.replace({ name: 'become-leader', query: { plan: String(pending) } })
+  }
+
+  return router.replace('/app')
+}
+
 function affiliationPayload() {
   return {
     country: form.country,
@@ -105,7 +128,7 @@ async function submit(): Promise<void> {
       sponsor_id: !invitationToken.value && sponsorId.value ? sponsorId.value : undefined,
       ...(isLeaderSignup.value ? affiliationPayload() : {}),
     })
-    await router.replace('/app')
+    await goAfterSignup()
     toast.success('Te enviamos un correo de bienvenida.', 'Cuenta creada')
   } catch (error) {
     errors.value = fieldErrors(error)
@@ -142,7 +165,7 @@ async function onGoogleCredential(idToken: string): Promise<void> {
       sponsor_id: !invitationToken.value && sponsorId.value ? sponsorId.value : undefined,
       ...(isLeaderSignup.value ? affiliationPayload() : {}),
     })
-    await router.replace('/app')
+    await goAfterSignup()
     toast.success('Te enviamos un correo de bienvenida.', 'Cuenta creada')
   } catch (error) {
     errors.value = fieldErrors(error)

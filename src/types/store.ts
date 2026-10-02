@@ -134,6 +134,7 @@ export interface ProductPayload {
   currency?: string
   stock: number
   image?: string | null
+  imageFile?: File | null
   is_active?: boolean
   is_published?: boolean
   fulfillment?: 'stock' | 'dropship'
